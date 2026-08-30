@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  customer
+  staff
+  admin
+}
+
+enum RoomStatus {
+  available
+  occupied
+  maintenance
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  checked_in
+  checked_out
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  refunded
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  role         UserRole   @default(customer)
+  phone        String?
+  isActive     Boolean    @default(true) @map("is_active")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  bookings  Booking[]
+  reviews   Review[]
+  auditLogs AuditLog[]
+  refreshTokens RefreshToken[]
+
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model HotelSettings {
+  id           String   @id @default("default")
+  name         String
+  address      String
+  description  String?
+  checkInTime  String   @map("check_in_time")
+  checkOutTime String   @map("check_out_time")
+  images       String[] @default([])
+
+  @@map("hotel_settings")
+}
+
+model RoomType {
+  id          String   @id @default(uuid())
+  name        String
+  basePrice   Decimal  @map("base_price") @db.Decimal(10, 2)
+  capacity    Int
+  amenities   String[] @default([])
+  images      String[] @default([])
+  description String?
+
+  rooms    Room[]
+  reviews  Review[]
+
+  @@index([name])
+  @@map("room_types")
+}
+
+model Room {
+  id         String     @id @default(uuid())
+  roomTypeId String     @map("room_type_id")
+  roomNumber String     @map("room_number")
+  floor      Int
+  status     RoomStatus @default(available)
+
+  roomType RoomType  @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+  bookings Booking[]
+
+  @@unique([roomNumber])
+  @@index([roomTypeId])
+  @@index([status])
+  @@map("rooms")
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  userId       String        @map("user_id")
+  roomId       String        @map("room_id")
+  checkIn      DateTime      @map("check_in")
+  checkOut     DateTime      @map("check_out")
+  status       BookingStatus @default(pending)
+  totalPrice   Decimal       @map("total_price") @db.Decimal(10, 2)
+  guestsCount  Int           @map("guests_count")
+  /// Payment hold expiry for pending online bookings. Null for walk-ins / confirmed stays.
+  expiresAt    DateTime?     @map("expires_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  room     Room      @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([userId])
+  @@index([roomId])
+  @@index([status])
+  @@index([checkIn, checkOut])
+  @@index([expiresAt])
+  @@map("bookings")
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  bookingId       String        @map("booking_id")
+  amount          Decimal       @db.Decimal(10, 2)
+  status          PaymentStatus @default(pending)
+  stripePaymentId String?       @map("stripe_payment_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("payments")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  roomTypeId String   @map("room_type_id")
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roomTypeId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+model PromoCode {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountPercent Int      @map("discount_percent")
+  validFrom       DateTime @map("valid_from")
+  validTo         DateTime @map("valid_to")
+  maxUses         Int      @map("max_uses")
+  usedCount       Int      @default(0) @map("used_count")
+
+  @@index([validFrom, validTo])
+  @@map("promo_codes")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  timestamp  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([targetType, targetId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
