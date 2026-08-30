@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import { LoginPageContent } from '../../pages/LoginPage'
 import { RegisterPageContent } from '../../pages/RegisterPage'
 import { useAuthNavigation } from '../../hooks/useAuthNavigation'
+import { useAuthPanelDocumentState } from '../../hooks/useAuthPanelDocumentState'
 import { type AuthPath, useAuthTransitionStore } from '../../store/authTransitionStore'
 import { useLandingHeroBackdropVisible } from '../../hooks/useLandingHeroBackdropVisible'
 import { LandingHeroBackdrop } from '../landing/LandingHeroBackdrop'
@@ -98,6 +99,12 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
     !!authPath &&
     (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
 
+  const brandingVisible =
+    phase !== 'exiting' && (phase === 'entering' || phase === 'open' || isAuthRoute)
+  const brandingEnterDelay = phase === 'entering' ? 0.45 : 0
+
+  useAuthPanelDocumentState()
+
   const prevPathnameRef = useRef(location.pathname)
 
   // Direct /login or /register visit — track open state for back-button exit
@@ -151,7 +158,12 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
       {showBranding && authPath && (
         <aside className="pointer-events-none fixed left-0 top-0 z-[55] hidden h-dvh w-1/2 lg:block">
           <div className="pointer-events-auto h-full">
-            <AuthBrandingPanel {...brandingFor(authPath)} onHome={closeAuth} />
+            <AuthBrandingPanel
+              {...brandingFor(authPath)}
+              onHome={closeAuth}
+              visible={brandingVisible}
+              enterDelay={brandingEnterDelay}
+            />
           </div>
         </aside>
       )}
