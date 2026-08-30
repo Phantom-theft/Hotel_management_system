@@ -1,12 +1,14 @@
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { LoginPageContent } from '../../pages/LoginPage'
 import { RegisterPageContent } from '../../pages/RegisterPage'
 import { useAuthNavigation } from '../../hooks/useAuthNavigation'
 import { useAuthPanelDocumentState } from '../../hooks/useAuthPanelDocumentState'
+import { useAuthTransitionScroll } from '../../hooks/useAuthTransitionScroll'
 import { type AuthPath, useAuthTransitionStore } from '../../store/authTransitionStore'
 import { useLandingHeroBackdropVisible } from '../../hooks/useLandingHeroBackdropVisible'
+import { scrollToTopInstant } from '../../utils/scroll'
 import { LandingHeroBackdrop } from '../landing/LandingHeroBackdrop'
 import { AuthBrandingPanel } from './AuthBrandingPanel'
 import { AuthSlidePanel } from './AuthSlidePanel'
@@ -104,6 +106,7 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
   const brandingEnterDelay = phase === 'entering' ? 0.45 : 0
 
   useAuthPanelDocumentState()
+  useAuthTransitionScroll()
 
   const prevPathnameRef = useRef(location.pathname)
 
@@ -121,12 +124,13 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
   // Browser back from auth route to home while panel is open → slide panel closed.
   // Only react to an actual /login|/register → / navigation; do not fire when
   // markOpen() runs while the URL is still / during the enter animation.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prev = prevPathnameRef.current
     const cameFromAuth = prev === '/login' || prev === '/register'
     const nowOnHome = location.pathname === '/'
 
     if (nowOnHome && cameFromAuth && phase === 'open') {
+      scrollToTopInstant()
       startExit()
     }
 
@@ -144,9 +148,6 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
   function handleExitComplete() {
     if (phase === 'exiting') {
       reset()
-      if (location.pathname !== '/') {
-        navigate('/', { replace: true })
-      }
     }
   }
 

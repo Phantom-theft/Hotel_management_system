@@ -23,4 +23,16 @@ export function useAuthPanelDocumentState() {
       delete root.dataset.authPanel
     }
   }, [authActive])
+
+  // Prevent background scroll while auth UI is active (avoids layout shift when scrolled down)
+  useLayoutEffect(() => {
+    if (!authActive) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [authActive])
 }
