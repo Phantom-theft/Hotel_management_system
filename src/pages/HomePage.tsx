@@ -58,18 +58,11 @@ export function HomePage() {
             in minutes.
           </p>
           {!isAuthenticated && (
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => openAuth('/login')}
-                className="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-neutral-100"
-              >
-                Sign in
-              </button>
+            <div className="mt-8">
               <button
                 type="button"
                 onClick={() => openAuth('/register')}
-                className="inline-flex rounded-full border border-white/40 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-neutral-100"
               >
                 Create account
               </button>

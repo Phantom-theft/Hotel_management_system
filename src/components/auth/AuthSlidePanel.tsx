@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 
 const TRANSITION_EASE = [0.4, 0, 0.2, 1] as const
-const TRANSITION_DURATION = 0.65
+const TRANSITION_DURATION = 0.7
 
 function useIsLgUp() {
   const [isLg, setIsLg] = useState(() =>
@@ -40,7 +40,9 @@ export function AuthSlidePanel({
   const isLg = useIsLgUp()
   const wasOpen = useRef(isOpen)
 
-  const instant = shouldReduceMotion || skipEnterAnimation
+  // skipEnterAnimation only affects the mount initial state (e.g. panel already open).
+  // Never shorten transition duration mid-flight — that caused a snap when markOpen() ran.
+  const instantTransition = shouldReduceMotion
 
   const desktopVariants = {
     closed: { width: '0%' },
@@ -55,28 +57,28 @@ export function AuthSlidePanel({
   const variants = isLg ? desktopVariants : mobileVariants
 
   useEffect(() => {
-    if (instant && isOpen) {
+    if (shouldReduceMotion && isOpen) {
       onEnterComplete?.()
     }
-  }, [instant, isOpen, onEnterComplete])
+  }, [shouldReduceMotion, isOpen, onEnterComplete])
 
   useEffect(() => {
     if (wasOpen.current && !isOpen) {
-      if (instant) {
+      if (shouldReduceMotion) {
         onExitComplete?.()
       }
     }
     wasOpen.current = isOpen
-  }, [isOpen, instant, onExitComplete])
+  }, [isOpen, shouldReduceMotion, onExitComplete])
 
   return (
     <motion.div
       className="fixed z-[60] overflow-hidden bg-white shadow-2xl shadow-black/20 max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-0 max-lg:h-[100dvh] lg:right-0 lg:top-0 lg:h-dvh lg:border-l lg:border-neutral-200/80"
-      initial={instant ? 'open' : 'closed'}
+      initial={shouldReduceMotion || skipEnterAnimation ? 'open' : 'closed'}
       animate={isOpen ? 'open' : 'closed'}
       variants={variants}
       transition={{
-        duration: instant ? 0 : TRANSITION_DURATION,
+        duration: instantTransition ? 0 : TRANSITION_DURATION,
         ease: TRANSITION_EASE,
       }}
       onAnimationComplete={(definition) => {

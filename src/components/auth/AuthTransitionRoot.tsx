@@ -92,7 +92,8 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
   const showBackdrop =
     location.pathname === '/' || isAuthRoute || phase === 'entering' || phase === 'exiting'
 
-  const showBranding = (isAuthRoute || phase === 'open') && authPath
+  const showBranding =
+    authPath && (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
   const showPanel =
     !!authPath &&
     (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
@@ -126,9 +127,10 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
   }, [location.pathname, phase, startExit])
 
   function handleEnterComplete() {
-    if (phase === 'entering' && path) {
+    const state = useAuthTransitionStore.getState()
+    if (state.phase === 'entering' && state.path) {
       markOpen()
-      navigate(path)
+      navigate(state.path)
     }
   }
 
