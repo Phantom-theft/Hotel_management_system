@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
+import { AuthLayout } from './components/AuthLayout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { BookingDetailPage } from './pages/BookingDetailPage'
@@ -23,6 +24,13 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
+          {/* Standalone full-viewport auth pages without header or footer */}
+          <Route element={<AuthLayout />}>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+          </Route>
+
+          {/* Main application layout with header and footer */}
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
             <Route
@@ -41,8 +49,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
 
             <Route
               path="book"
