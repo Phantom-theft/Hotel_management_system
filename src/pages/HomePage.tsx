@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from 'framer-motion'
 import { useAuthStore } from '../store/authStore'
 import { useAuthNavigation } from '../hooks/useAuthNavigation'
 import { useLandingHashScroll } from '../hooks/useLandingHashScroll'
@@ -39,13 +40,22 @@ const whyChoose = [
 export function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const { openAuth } = useAuthNavigation()
+  const shouldReduceMotion = useReducedMotion()
   useLandingHashScroll()
 
   return (
     <div className="relative left-1/2 -mt-8 w-screen max-w-[100vw] -translate-x-1/2">
       {/* Hero — shared fixed backdrop renders behind; content only here */}
       <section id="hero" className="relative min-h-[100dvh] overflow-hidden">
-        <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-6xl flex-col justify-end px-4 pb-16 pt-24 sm:pb-20 sm:pt-28">
+        <motion.div
+          className="relative z-10 mx-auto flex min-h-[100dvh] max-w-6xl flex-col justify-end px-4 pb-16 pt-24 sm:pb-20 sm:pt-28"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.35,
+            ease: [0, 0, 0.2, 1],
+          }}
+        >
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
             Harborlight Hotel
           </p>
@@ -68,7 +78,7 @@ export function HomePage() {
               </button>
             </div>
           )}
-        </div>
+        </motion.div>
       </section>
 
       {/* Trust badges */}
