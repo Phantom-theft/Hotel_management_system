@@ -13,7 +13,7 @@ const resources = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto bg-primary text-neutral-300">
+    <footer className="relative z-10 mt-auto w-full bg-primary text-neutral-300">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="sm:col-span-2 lg:col-span-1">
           <p className="font-display text-xl font-extrabold text-white">Harborlight</p>

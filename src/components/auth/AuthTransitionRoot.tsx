@@ -5,6 +5,7 @@ import { LoginPageContent } from '../../pages/LoginPage'
 import { RegisterPageContent } from '../../pages/RegisterPage'
 import { useAuthNavigation } from '../../hooks/useAuthNavigation'
 import { type AuthPath, useAuthTransitionStore } from '../../store/authTransitionStore'
+import { useLandingHeroBackdropVisible } from '../../hooks/useLandingHeroBackdropVisible'
 import { LandingHeroBackdrop } from '../landing/LandingHeroBackdrop'
 import { AuthBrandingPanel } from './AuthBrandingPanel'
 import { AuthSlidePanel } from './AuthSlidePanel'
@@ -89,8 +90,7 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
       : phase === 'entering' || phase === 'exiting' || phase === 'open'
         ? path
         : null
-  const showBackdrop =
-    location.pathname === '/' || isAuthRoute || phase === 'entering' || phase === 'exiting'
+  const showBackdrop = useLandingHeroBackdropVisible()
 
   const showBranding =
     authPath && (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
