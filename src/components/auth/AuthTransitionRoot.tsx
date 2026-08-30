@@ -99,8 +99,8 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
     !!authPath &&
     (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
 
-  const brandingVisible =
-    phase !== 'exiting' && (phase === 'entering' || phase === 'open' || isAuthRoute)
+  const brandingOpen =
+    Boolean(authPath) && (phase === 'entering' || phase === 'open' || isAuthRoute)
   const brandingEnterDelay = phase === 'entering' ? 0.45 : 0
 
   useAuthPanelDocumentState()
@@ -158,12 +158,16 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
       {showBranding && authPath && (
         <aside className="pointer-events-none fixed left-0 top-0 z-[55] hidden h-dvh w-1/2 lg:block">
           <div className="pointer-events-auto h-full">
-            <AuthBrandingPanel
-              {...brandingFor(authPath)}
-              onHome={closeAuth}
-              visible={brandingVisible}
-              enterDelay={brandingEnterDelay}
-            />
+            <AnimatePresence>
+              {brandingOpen && (
+                <AuthBrandingPanel
+                  key={authPath}
+                  {...brandingFor(authPath)}
+                  onHome={closeAuth}
+                  enterDelay={brandingEnterDelay}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </aside>
       )}
