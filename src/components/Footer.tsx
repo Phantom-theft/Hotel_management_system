@@ -1,9 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuthNavigation } from '../hooks/useAuthNavigation'
+import type { AuthPath } from '../store/authTransitionStore'
 
-const quickLinks = [
-  { to: '/rooms', label: 'Rooms' },
-  { to: '/login', label: 'Sign in' },
-  { to: '/register', label: 'Register' },
+const quickLinks: { path: AuthPath | '/rooms'; label: string; auth?: boolean }[] = [
+  { path: '/rooms', label: 'Rooms' },
+  { path: '/login', label: 'Sign in', auth: true },
+  { path: '/register', label: 'Register', auth: true },
 ]
 
 const resources = [
@@ -12,6 +14,9 @@ const resources = [
 ]
 
 export function Footer() {
+  const location = useLocation()
+  const { openAuth } = useAuthNavigation()
+
   return (
     <footer className="relative z-10 mt-auto w-full bg-primary text-neutral-300">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
@@ -27,10 +32,22 @@ export function Footer() {
           <p className="text-sm font-semibold uppercase tracking-wider text-white">Quick links</p>
           <ul className="mt-4 space-y-2 text-sm">
             {quickLinks.map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} className="transition hover:text-white">
-                  {l.label}
-                </Link>
+              <li key={l.path}>
+                {l.auth ? (
+                  <button
+                    type="button"
+                    onClick={() => openAuth(l.path as AuthPath)}
+                    className={`transition hover:text-white ${
+                      location.pathname === l.path ? 'text-white' : ''
+                    }`}
+                  >
+                    {l.label}
+                  </button>
+                ) : (
+                  <Link to={l.path} className="transition hover:text-white">
+                    {l.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

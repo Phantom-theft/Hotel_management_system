@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { LoginPageContent } from '../../pages/LoginPage'
@@ -8,8 +8,9 @@ import { useAuthPanelDocumentState } from '../../hooks/useAuthPanelDocumentState
 import { useAuthTransitionScroll } from '../../hooks/useAuthTransitionScroll'
 import { type AuthPath, useAuthTransitionStore } from '../../store/authTransitionStore'
 import { useLandingHeroBackdropVisible } from '../../hooks/useLandingHeroBackdropVisible'
+import { useScrolledPastHero } from '../../hooks/useScrolledPastHero'
 import { scrollToTopInstant } from '../../utils/scroll'
-import { LandingHeroBackdrop } from '../landing/LandingHeroBackdrop'
+import { LandingHeroBackdrop, SCROLL_REVEAL_THRESHOLD } from '../landing/LandingHeroBackdrop'
 import { AuthBrandingPanel } from './AuthBrandingPanel'
 import { AuthSlidePanel } from './AuthSlidePanel'
 
@@ -94,12 +95,27 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
         ? path
         : null
   const showBackdrop = useLandingHeroBackdropVisible()
+  const scrolledPastHero = useScrolledPastHero()
 
-  const showBranding =
-    authPath && (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
-  const showPanel =
-    !!authPath &&
-    (phase === 'entering' || phase === 'open' || phase === 'exiting' || isAuthRoute)
+  const authPanelActive =
+    isAuthRoute || phase === 'entering' || phase === 'open' || phase === 'exiting'
+
+  const [openedFromScroll, setOpenedFromScroll] = useState(false)
+
+  useLayoutEffect(() => {
+    if (phase === 'entering') {
+      setOpenedFromScroll(window.scrollY > SCROLL_REVEAL_THRESHOLD)
+    }
+    if (phase === 'idle') {
+      setOpenedFromScroll(false)
+    }
+  }, [phase])
+
+  const backdropObscured =
+    location.pathname === '/' && scrolledPastHero && !authPanelActive
+
+  const showBranding = authPath && authPanelActive
+  const showPanel = !!authPath && authPanelActive
 
   const brandingOpen =
     Boolean(authPath) && (phase === 'entering' || phase === 'open' || isAuthRoute)
@@ -153,7 +169,13 @@ export function AuthTransitionRoot({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {showBackdrop && <LandingHeroBackdrop />}
+      {showBackdrop && (
+        <LandingHeroBackdrop
+          stackAboveContent={authPanelActive}
+          authReveal={openedFromScroll && authPanelActive}
+          obscured={backdropObscured}
+        />
+      )}
       {children}
 
       {showBranding && authPath && (
