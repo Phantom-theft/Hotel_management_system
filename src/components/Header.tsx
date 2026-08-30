@@ -6,10 +6,12 @@ import { LANDING_NAV_ANCHORS, LANDING_SECTION_IDS } from '../constants/landing'
 import { useLandingScrollSpy } from '../hooks/useLandingScrollSpy'
 import { clearSessionCache } from '../queryClient'
 import { useAuthStore } from '../store/authStore'
+import { useAuthNavigation } from '../hooks/useAuthNavigation'
 import { scrollToSection, scrollToTop } from '../utils/scroll'
 
 export function Header() {
   const { isAuthenticated, user, clearAuth } = useAuthStore()
+  const { openAuth } = useAuthNavigation()
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -171,12 +173,13 @@ export function Header() {
 
         <div className="flex items-center gap-2 sm:gap-3">
           {!isAuthenticated ? (
-            <NavLink
-              to="/login"
+            <button
+              type="button"
+              onClick={() => openAuth('/login')}
               className={`${desktopRouteLinkClass({ isActive: location.pathname === '/login' })} hidden sm:inline`}
             >
               Sign in
-            </NavLink>
+            </button>
           ) : (
             <>
               <span
@@ -267,13 +270,16 @@ export function Header() {
 
           <div className="mt-4 flex flex-col gap-2 border-t border-neutral-100 pt-4">
             {!isAuthenticated ? (
-              <NavLink
-                to="/login"
-                className={mobileRouteLinkClass}
-                onClick={closeMobile}
+              <button
+                type="button"
+                onClick={() => {
+                  closeMobile()
+                  openAuth('/login')
+                }}
+                className={mobileNavItemClass(location.pathname === '/login')}
               >
                 Sign in
-              </NavLink>
+              </button>
             ) : (
               <>
                 {user?.role === 'customer' && (

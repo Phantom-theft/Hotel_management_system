@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../api/hotel'
-import { AuthBrandingPanel, AuthSplitShell } from '../components/auth/AuthSplitShell'
+import { useAuthNavigation } from '../hooks/useAuthNavigation'
 import { clearSessionCache } from '../queryClient'
 import { useAuthStore } from '../store/authStore'
+import { useAuthTransitionStore } from '../store/authTransitionStore'
 import type { UserRole } from '../types/api'
 import { readReturnPath } from '../utils/authRedirect'
 
@@ -13,10 +14,11 @@ function homeForRole(role: UserRole) {
   return '/rooms'
 }
 
-export function LoginPage() {
+export function LoginPageContent() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
   const location = useLocation()
+  const { switchAuth } = useAuthNavigation()
   const returnTo = readReturnPath(location.state)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,6 +33,7 @@ export function LoginPage() {
       const data = await login(email, password)
       clearSessionCache()
       setAuth(data.user, data.accessToken)
+      useAuthTransitionStore.getState().reset()
       navigate(returnTo ?? homeForRole(data.user.role), { replace: true })
     } catch (err: unknown) {
       const message =
@@ -43,34 +46,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthSplitShell
-      branding={
-        <AuthBrandingPanel
-          eyebrow="Guest Portal"
-          title="Welcome back to Harborlight"
-          description="Sign in to manage your stays, view upcoming reservations, and access member rates."
-          footer={
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
-              <div className="flex items-center gap-1 text-sm text-amber-400" aria-label="5 out of 5 stars">
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-              </div>
-              <p className="mt-2 text-sm italic leading-relaxed text-neutral-200">
-                &ldquo;The calmest stay on the coast. Check-in was effortless, and the harbor views at
-                sunrise were unforgettable.&rdquo;
-              </p>
-              <p className="mt-3 text-xs font-semibold text-neutral-400">
-                Eleanor & Marcus V.{' '}
-                <span className="font-normal text-neutral-500">· Returning Guests</span>
-              </p>
-            </div>
-          }
-        />
-      }
-    >
+    <>
       <div>
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-primary sm:text-3xl lg:text-4xl">
           Sign in to your account
@@ -127,19 +103,19 @@ export function LoginPage() {
 
       <p className="mt-8 text-center text-sm text-neutral-600">
         Don&apos;t have an account?{' '}
-        <Link
-          to="/register"
+        <button
+          type="button"
+          onClick={() => switchAuth('/register')}
           className="font-semibold text-accent transition hover:text-primary hover:underline"
         >
           Create one
-        </Link>
+        </button>
       </p>
-
-      <p className="mt-4 text-center text-xs text-neutral-400">
-        <Link to="/" className="transition hover:text-neutral-600 hover:underline">
-          ← Return to Harborlight home
-        </Link>
-      </p>
-    </AuthSplitShell>
+    </>
   )
+}
+
+/** Route placeholder — UI is rendered by AuthTransitionRoot */
+export function LoginPage() {
+  return null
 }

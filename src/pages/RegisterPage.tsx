@@ -1,13 +1,15 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { register } from '../api/hotel'
-import { AuthBrandingPanel, AuthSplitShell } from '../components/auth/AuthSplitShell'
+import { useAuthNavigation } from '../hooks/useAuthNavigation'
 import { clearSessionCache } from '../queryClient'
 import { useAuthStore } from '../store/authStore'
+import { useAuthTransitionStore } from '../store/authTransitionStore'
 
-export function RegisterPage() {
+export function RegisterPageContent() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
+  const { switchAuth } = useAuthNavigation()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -28,6 +30,7 @@ export function RegisterPage() {
       })
       clearSessionCache()
       setAuth(data.user, data.accessToken)
+      useAuthTransitionStore.getState().reset()
       navigate('/rooms', { replace: true })
     } catch (err: unknown) {
       const message =
@@ -40,42 +43,7 @@ export function RegisterPage() {
   }
 
   return (
-    <AuthSplitShell
-      branding={
-        <AuthBrandingPanel
-          eyebrow="New Guest Experience"
-          title="Join Harborlight"
-          description="Create your account in moments to enjoy direct booking guarantees, seamless check-ins, and personalized stays."
-          footer={
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md">
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">
-                Harborlight Guest Privileges
-              </p>
-              <ul className="mt-3 space-y-2.5 text-xs leading-relaxed text-neutral-200">
-                <li className="flex items-center gap-2">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[10px] font-bold text-amber-300">
-                    ✓
-                  </span>
-                  <span>Best Rate Guarantee on all coastal suites</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[10px] font-bold text-amber-300">
-                    ✓
-                  </span>
-                  <span>Instant reservations with transparent pricing</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-[10px] font-bold text-amber-300">
-                    ✓
-                  </span>
-                  <span>Flexible cancellation options on eligible stays</span>
-                </li>
-              </ul>
-            </div>
-          }
-        />
-      }
-    >
+    <>
       <div>
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-primary sm:text-3xl lg:text-4xl">
           Create your account
@@ -155,19 +123,19 @@ export function RegisterPage() {
 
       <p className="mt-8 text-center text-sm text-neutral-600">
         Already have an account?{' '}
-        <Link
-          to="/login"
+        <button
+          type="button"
+          onClick={() => switchAuth('/login')}
           className="font-semibold text-accent transition hover:text-primary hover:underline"
         >
           Sign in
-        </Link>
+        </button>
       </p>
-
-      <p className="mt-4 text-center text-xs text-neutral-400">
-        <Link to="/" className="transition hover:text-neutral-600 hover:underline">
-          ← Return to Harborlight home
-        </Link>
-      </p>
-    </AuthSplitShell>
+    </>
   )
+}
+
+/** Route placeholder — UI is rendered by AuthTransitionRoot */
+export function RegisterPage() {
+  return null
 }

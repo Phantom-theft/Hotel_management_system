@@ -1,0 +1,128 @@
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+
+const TRANSITION_EASE = [0.4, 0, 0.2, 1] as const
+const TRANSITION_DURATION = 0.65
+
+function useIsLgUp() {
+  const [isLg, setIsLg] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true,
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const onChange = () => setIsLg(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  return isLg
+}
+
+interface AuthSlidePanelProps {
+  isOpen: boolean
+  skipEnterAnimation?: boolean
+  onEnterComplete?: () => void
+  onExitComplete?: () => void
+  onClose: () => void
+  children: ReactNode
+}
+
+export function AuthSlidePanel({
+  isOpen,
+  skipEnterAnimation = false,
+  onEnterComplete,
+  onExitComplete,
+  onClose,
+  children,
+}: AuthSlidePanelProps) {
+  const shouldReduceMotion = useReducedMotion()
+  const isLg = useIsLgUp()
+  const wasOpen = useRef(isOpen)
+
+  const instant = shouldReduceMotion || skipEnterAnimation
+
+  const desktopVariants = {
+    closed: { width: '0%' },
+    open: { width: '50%' },
+  }
+
+  const mobileVariants = {
+    closed: { y: '100%' },
+    open: { y: '0%' },
+  }
+
+  const variants = isLg ? desktopVariants : mobileVariants
+
+  useEffect(() => {
+    if (instant && isOpen) {
+      onEnterComplete?.()
+    }
+  }, [instant, isOpen, onEnterComplete])
+
+  useEffect(() => {
+    if (wasOpen.current && !isOpen) {
+      if (instant) {
+        onExitComplete?.()
+      }
+    }
+    wasOpen.current = isOpen
+  }, [isOpen, instant, onExitComplete])
+
+  return (
+    <motion.div
+      className="fixed z-[60] overflow-hidden bg-white shadow-2xl shadow-black/20 max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-0 max-lg:h-[100dvh] lg:right-0 lg:top-0 lg:h-dvh lg:border-l lg:border-neutral-200/80"
+      initial={instant ? 'open' : 'closed'}
+      animate={isOpen ? 'open' : 'closed'}
+      variants={variants}
+      transition={{
+        duration: instant ? 0 : TRANSITION_DURATION,
+        ease: TRANSITION_EASE,
+      }}
+      onAnimationComplete={(definition) => {
+        if (definition === 'open' && isOpen) onEnterComplete?.()
+        if (definition === 'closed' && !isOpen) onExitComplete?.()
+      }}
+    >
+      <div className="relative flex h-full w-screen flex-col overflow-y-auto bg-white lg:w-[50vw] lg:min-w-[50vw]">
+        <div className="absolute right-4 top-4 z-30 sm:right-6 sm:top-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white/80 text-neutral-600 backdrop-blur-sm transition-all hover:bg-neutral-100 hover:text-primary hover:shadow-sm"
+            aria-label="Close and return to home"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-10 lg:px-16 xl:px-24">
+          <div className="mx-auto w-full max-w-md">
+            <button
+              type="button"
+              onClick={onClose}
+              className="mb-8 inline-block font-display text-xl font-extrabold tracking-tight text-primary lg:hidden"
+            >
+              Harborlight
+            </button>
+            {children}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
