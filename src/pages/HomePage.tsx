@@ -43,8 +43,8 @@ export function HomePage() {
 
   return (
     <div className="relative left-1/2 -mt-8 w-screen max-w-[100vw] -translate-x-1/2">
-      {/* Hero — full viewport width & height below navbar */}
-      <section className="relative min-h-[calc(100dvh-4.5rem)] overflow-hidden">
+      {/* Hero — full viewport width & height behind transparent navbar */}
+      <section id="hero" className="relative min-h-[100dvh] overflow-hidden">
         <img
           src={landingBackground}
           alt=""
@@ -55,7 +55,11 @@ export function HomePage() {
           className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-black/10"
           aria-hidden
         />
-        <div className="relative mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-6xl flex-col justify-end px-4 pb-16 pt-20 sm:pb-20 sm:pt-24">
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/20"
+          aria-hidden
+        />
+        <div className="relative mx-auto flex min-h-[100dvh] max-w-6xl flex-col justify-end px-4 pb-16 pt-24 sm:pb-20 sm:pt-28">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
             Harborlight Hotel
           </p>
