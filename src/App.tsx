@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { AuthLayout } from './components/AuthLayout'
+import { DashboardLayout } from './components/DashboardLayout'
 import { AuthTransitionRoot } from './components/auth/AuthTransitionRoot'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -30,70 +31,37 @@ function AppRoutes() {
           <Route path="register" element={<RegisterPage />} />
         </Route>
 
-        {/* Main application layout with header and footer */}
+        {/* Staff/admin tooling — no site footer (must be before AppLayout catch-all) */}
+        <Route element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="staff" element={<StaffDashboardPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="admin" element={<AdminLayout />}>
+              <Route index element={<AdminOverviewPage />} />
+              <Route path="rooms" element={<AdminRoomsPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
+              <Route path="staff" element={<AdminStaffPage />} />
+            </Route>
+          </Route>
+        </Route>
+
+        {/* Public customer-facing shell */}
         <Route element={<AppLayout />}>
           <Route index element={<HomePage />} />
-          <Route
-            path="rooms"
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
-                <RoomsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="rooms/:id"
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
-                <RoomDetailPage />
-              </ProtectedRoute>
-            }
-          />
 
-          <Route
-            path="book"
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'admin', 'staff']}>
-                <BookingFlowPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="my-bookings"
-            element={
-              <ProtectedRoute allowedRoles={['customer']}>
-                <MyBookingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="my-bookings/:id"
-            element={
-              <ProtectedRoute allowedRoles={['customer']}>
-                <BookingDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="staff"
-            element={
-              <ProtectedRoute allowedRoles={['staff', 'admin']}>
-                <StaffDashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="admin"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<AdminOverviewPage />} />
-            <Route path="rooms" element={<AdminRoomsPage />} />
-            <Route path="reports" element={<AdminReportsPage />} />
-            <Route path="staff" element={<AdminStaffPage />} />
+          <Route element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']} />}>
+            <Route path="rooms" element={<RoomsPage />} />
+            <Route path="rooms/:id" element={<RoomDetailPage />} />
+            <Route path="book" element={<BookingFlowPage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+            <Route path="my-bookings" element={<MyBookingsPage />} />
+            <Route path="my-bookings/:id" element={<BookingDetailPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

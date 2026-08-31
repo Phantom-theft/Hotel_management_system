@@ -4,10 +4,45 @@ import { Menu, X } from 'lucide-react'
 import { logout as logoutApi } from '../api/hotel'
 import { LANDING_NAV_ANCHORS, LANDING_SECTION_IDS } from '../constants/landing'
 import { useLandingScrollSpy } from '../hooks/useLandingScrollSpy'
+import { useAuthNavigation } from '../hooks/useAuthNavigation'
 import { clearSessionCache } from '../queryClient'
 import { useAuthStore } from '../store/authStore'
-import { useAuthNavigation } from '../hooks/useAuthNavigation'
+import type { UserRole } from '../types/api'
 import { scrollToSection, scrollToTop } from '../utils/scroll'
+
+const appRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `text-sm font-medium tracking-wide transition ${
+    isActive ? 'text-accent' : 'text-neutral-600 hover:text-primary'
+  }`
+
+const mobileAppRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `block py-2 text-sm font-medium tracking-wide transition ${
+    isActive ? 'text-accent' : 'text-neutral-700 hover:text-primary'
+  }`
+
+function appNavLinksForRole(role: UserRole | undefined) {
+  switch (role) {
+    case 'admin':
+      return [
+        { to: '/admin/rooms', label: 'Inventory' },
+        { to: '/admin/reports', label: 'Reports' },
+        { to: '/admin/staff', label: 'Team' },
+        { to: '/staff', label: 'Desk' },
+      ]
+    case 'staff':
+      return [
+        { to: '/staff', label: 'Desk', end: true },
+        { to: '/rooms', label: 'Rooms' },
+      ]
+    case 'customer':
+      return [
+        { to: '/rooms', label: 'Rooms' },
+        { to: '/my-bookings', label: 'My bookings' },
+      ]
+    default:
+      return []
+  }
+}
 
 export function Header() {
   const { isAuthenticated, user, clearAuth } = useAuthStore()
@@ -18,11 +53,16 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
 
   const isHome = location.pathname === '/'
+  const showMarketingNav = isHome
   const activeSection = useLandingScrollSpy(LANDING_SECTION_IDS, isHome)
   const homeActive = isHome && activeSection === null
+  const appNavLinks = appNavLinksForRole(user?.role)
 
-  // On the landing page, navbar is transparent when over the hero and mobile menu is closed
   const isTransparent = isHome && !isScrolled && !mobileOpen
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     if (!isHome) return
@@ -31,7 +71,6 @@ export function Header() {
       const hero = document.getElementById('hero')
       if (hero) {
         const rect = hero.getBoundingClientRect()
-        // Scrolled past hero once hero's bottom reaches the navbar bottom edge (~70px)
         setIsScrolled(rect.bottom <= 70)
       } else {
         setIsScrolled(window.scrollY > 80)
@@ -61,13 +100,6 @@ export function Header() {
     }
   }
 
-  const cta =
-    user?.role === 'admin'
-      ? { to: '/admin', label: 'Admin' }
-      : user?.role === 'staff'
-        ? { to: '/staff', label: 'Desk' }
-        : null
-
   function closeMobile() {
     setMobileOpen(false)
   }
@@ -90,7 +122,6 @@ export function Header() {
     }
   }
 
-  // Desktop nav item styling based on active & transparent state
   const desktopNavItemClass = (active: boolean) =>
     `text-sm font-medium tracking-wide transition-colors duration-300 ${
       isTransparent
@@ -113,15 +144,9 @@ export function Header() {
           : 'text-neutral-600 hover:text-primary'
     }`
 
-  // Mobile menu items always render on a solid white dropdown background
   const mobileNavItemClass = (active: boolean) =>
     `block w-full py-2 text-left text-sm font-medium tracking-wide transition ${
       active ? 'text-accent' : 'text-neutral-700 hover:text-primary'
-    }`
-
-  const mobileRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `block py-2 text-sm font-medium tracking-wide transition ${
-      isActive ? 'text-accent' : 'text-neutral-700 hover:text-primary'
     }`
 
   return (
@@ -151,35 +176,52 @@ export function Header() {
         </Link>
 
         <nav className="hidden flex-1 items-center justify-center gap-4 xl:gap-5 lg:flex" aria-label="Primary">
-          <button type="button" onClick={goHome} className={desktopNavItemClass(homeActive)}>
-            Home
-          </button>
-          {isAuthenticated && (
-            <NavLink to="/rooms" className={desktopRouteLinkClass}>
-              Rooms
-            </NavLink>
+          {showMarketingNav ? (
+            <>
+              <button type="button" onClick={goHome} className={desktopNavItemClass(homeActive)}>
+                Home
+              </button>
+              {isAuthenticated && (
+                <NavLink to="/rooms" className={desktopRouteLinkClass}>
+                  Rooms
+                </NavLink>
+              )}
+              {LANDING_NAV_ANCHORS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => goToSection(item.id)}
+                  className={desktopNavItemClass(activeSection === item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </>
+          ) : (
+            appNavLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={appRouteLinkClass}
+              >
+                {link.label}
+              </NavLink>
+            ))
           )}
-          {LANDING_NAV_ANCHORS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => goToSection(item.id)}
-              className={desktopNavItemClass(isHome && activeSection === item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
           {!isAuthenticated ? (
-            <button
-              type="button"
-              onClick={() => openAuth('/login')}
-              className={`${desktopRouteLinkClass({ isActive: location.pathname === '/login' })} hidden sm:inline`}
-            >
-              Sign in
-            </button>
+            showMarketingNav && (
+              <button
+                type="button"
+                onClick={() => openAuth('/login')}
+                className={`${desktopRouteLinkClass({ isActive: location.pathname === '/login' })} hidden sm:inline`}
+              >
+                Sign in
+              </button>
+            )
           ) : (
             <>
               <span
@@ -189,18 +231,6 @@ export function Header() {
               >
                 {user?.name}
               </span>
-              {cta && (
-                <Link
-                  to={cta.to}
-                  className={`hidden rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 sm:inline-flex ${
-                    isTransparent
-                      ? 'bg-white text-primary hover:bg-white/90 shadow-sm'
-                      : 'bg-primary text-white hover:bg-primary-light'
-                  }`}
-                >
-                  {cta.label}
-                </Link>
-              )}
               <button
                 type="button"
                 onClick={handleLogout}
@@ -239,64 +269,65 @@ export function Header() {
           aria-label="Mobile"
         >
           <ul className="space-y-1">
-            <li>
-              <button type="button" onClick={goHome} className={mobileNavItemClass(homeActive)}>
-                Home
-              </button>
-            </li>
-            {isAuthenticated && (
-              <li>
-                <NavLink
-                  to="/rooms"
-                  className={mobileRouteLinkClass}
-                  onClick={closeMobile}
-                >
-                  Rooms
-                </NavLink>
-              </li>
+            {showMarketingNav ? (
+              <>
+                <li>
+                  <button type="button" onClick={goHome} className={mobileNavItemClass(homeActive)}>
+                    Home
+                  </button>
+                </li>
+                {isAuthenticated && (
+                  <li>
+                    <NavLink to="/rooms" className={mobileAppRouteLinkClass} onClick={closeMobile}>
+                      Rooms
+                    </NavLink>
+                  </li>
+                )}
+                {LANDING_NAV_ANCHORS.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => goToSection(item.id)}
+                      className={mobileNavItemClass(activeSection === item.id)}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </>
+            ) : (
+              appNavLinks.map((link) => (
+                <li key={link.to}>
+                  <NavLink
+                    to={link.to}
+                    end={link.end}
+                    className={mobileAppRouteLinkClass}
+                    onClick={closeMobile}
+                  >
+                    {link.label}
+                  </NavLink>
+                </li>
+              ))
             )}
-            {LANDING_NAV_ANCHORS.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => goToSection(item.id)}
-                  className={mobileNavItemClass(isHome && activeSection === item.id)}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))}
           </ul>
 
           <div className="mt-4 flex flex-col gap-2 border-t border-neutral-100 pt-4">
             {!isAuthenticated ? (
-              <button
-                type="button"
-                onClick={() => {
-                  closeMobile()
-                  openAuth('/login')
-                }}
-                className={mobileNavItemClass(location.pathname === '/login')}
-              >
-                Sign in
-              </button>
+              showMarketingNav && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobile()
+                    openAuth('/login')
+                  }}
+                  className={mobileNavItemClass(location.pathname === '/login')}
+                >
+                  Sign in
+                </button>
+              )
             ) : (
               <>
-                {user?.role === 'customer' && (
-                  <NavLink to="/my-bookings" className={mobileRouteLinkClass} onClick={closeMobile}>
-                    My bookings
-                  </NavLink>
-                )}
-                {(user?.role === 'staff' || user?.role === 'admin') && (
-                  <NavLink to="/staff" className={mobileRouteLinkClass} onClick={closeMobile}>
-                    Desk
-                  </NavLink>
-                )}
-                {user?.role === 'admin' && (
-                  <NavLink to="/admin" className={mobileRouteLinkClass} onClick={closeMobile}>
-                    Admin
-                  </NavLink>
-                )}
+                <p className="px-0 py-1 text-sm text-neutral-500">{user?.name}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -307,15 +338,6 @@ export function Header() {
                 >
                   Sign out
                 </button>
-                {cta && (
-                  <Link
-                    to={cta.to}
-                    onClick={closeMobile}
-                    className="inline-flex justify-center rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-light"
-                  >
-                    {cta.label}
-                  </Link>
-                )}
               </>
             )}
           </div>

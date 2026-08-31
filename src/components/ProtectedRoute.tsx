@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
+import { useAuthHydrated } from '../hooks/useAuthHydrated'
+import { selectIsSessionValid, useAuthStore } from '../store/authStore'
 import type { UserRole } from '../types/api'
 
 interface ProtectedRouteProps {
@@ -9,10 +10,20 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) {
-  const { isAuthenticated, user } = useAuthStore()
+  const hydrated = useAuthHydrated()
+  const sessionValid = useAuthStore(selectIsSessionValid)
+  const user = useAuthStore((s) => s.user)
   const location = useLocation()
 
-  if (!isAuthenticated || !user) {
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-[12rem] items-center justify-center" aria-busy="true">
+        <p className="text-sm text-neutral-500">Loading…</p>
+      </div>
+    )
+  }
+
+  if (!sessionValid || !user) {
     const returnTo = `${location.pathname}${location.search}${location.hash}`
     return <Navigate to="/login" replace state={{ from: returnTo }} />
   }
