@@ -1,4 +1,4 @@
-import { BedDouble } from 'lucide-react'
+import { BedDouble, Eye } from 'lucide-react'
 import { StatusBadge } from '../ui/StatusBadge'
 import type { Booking } from '../../types/api'
 
@@ -16,6 +16,7 @@ function formatDate(iso: string) {
 export interface AdminBookingTableActions {
   onCheckIn?: (id: string) => void
   onCheckOut?: (id: string) => void
+  onSelectBooking?: (booking: Booking) => void
   busyId?: string | null
 }
 
@@ -37,7 +38,12 @@ export function AdminBookingTableRow({
   const busy = actions?.busyId === booking.id
 
   return (
-    <tr className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/80">
+    <tr
+      className={`border-b border-neutral-100 last:border-0 hover:bg-neutral-50/80 transition-colors ${
+        actions?.onSelectBooking ? 'cursor-pointer' : ''
+      }`}
+      onClick={() => actions?.onSelectBooking?.(booking)}
+    >
       {showGuestColumn && (
         <td className="px-4 py-3">
           <div className="min-w-0">
@@ -48,12 +54,12 @@ export function AdminBookingTableRow({
       )}
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary">
             <BedDouble className="h-4 w-4" aria-hidden />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-primary">{typeName}</p>
-            <p className="text-xs text-neutral-500">Room {roomLabel}</p>
+            <p className="text-xs text-neutral-500">Room #{roomLabel}</p>
           </div>
         </div>
       </td>
@@ -67,8 +73,19 @@ export function AdminBookingTableRow({
       <td className="px-4 py-3">
         <StatusBadge status={booking.status} />
       </td>
-      {actions && (actions.onCheckIn || actions.onCheckOut) && (
-        <td className="px-4 py-3 text-right">
+      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-2">
+          {actions?.onSelectBooking && (
+            <button
+              type="button"
+              onClick={() => actions.onSelectBooking!(booking)}
+              className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-primary"
+              title="View details"
+              aria-label="View booking details"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+          )}
           {canCheckIn && (
             <button
               type="button"
@@ -89,9 +106,11 @@ export function AdminBookingTableRow({
               Check out
             </button>
           )}
-          {!canCheckIn && !canCheckOut && <span className="text-xs text-neutral-400">—</span>}
-        </td>
-      )}
+          {!canCheckIn && !canCheckOut && !actions?.onSelectBooking && (
+            <span className="text-xs text-neutral-400">—</span>
+          )}
+        </div>
+      </td>
     </tr>
   )
 }
@@ -111,8 +130,6 @@ export function AdminBookingTable({
     return <p className="py-8 text-center text-sm text-neutral-500">{emptyMessage}</p>
   }
 
-  const showActions = actions && (actions.onCheckIn || actions.onCheckOut)
-
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left">
@@ -124,7 +141,7 @@ export function AdminBookingTable({
             <th className="px-4 py-3">Stay</th>
             <th className="px-4 py-3">Amount</th>
             <th className="px-4 py-3">Status</th>
-            {showActions && <th className="px-4 py-3 text-right">Actions</th>}
+            <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -141,3 +158,4 @@ export function AdminBookingTable({
     </div>
   )
 }
+

@@ -21,7 +21,9 @@ import { StaffRoomsPage } from './pages/staff/StaffRoomsPage'
 import { AdminBookingsPage } from './pages/admin/AdminBookingsPage'
 import { AdminLayout } from './pages/admin/AdminLayout'
 import { AdminOverviewPage } from './pages/admin/AdminOverviewPage'
+import { AdminPromotionsPage } from './pages/admin/AdminPromotionsPage'
 import { AdminReportsPage } from './pages/admin/AdminReportsPage'
+import { AdminReviewsPage } from './pages/admin/AdminReviewsPage'
 import { AdminRoomsPage } from './pages/admin/AdminRoomsPage'
 import { AdminStaffPage } from './pages/admin/AdminStaffPage'
 
@@ -50,11 +52,14 @@ function AppRoutes() {
               <Route index element={<AdminOverviewPage />} />
               <Route path="rooms" element={<AdminRoomsPage />} />
               <Route path="bookings" element={<AdminBookingsPage />} />
+              <Route path="promotions" element={<AdminPromotionsPage />} />
+              <Route path="reviews" element={<AdminReviewsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="staff" element={<AdminStaffPage />} />
             </Route>
           </Route>
         </Route>
+
 
         {/* Public customer-facing shell */}
         <Route element={<AppLayout />}>

@@ -6,6 +6,7 @@ import type {
   CreateBookingResponse,
   OccupancyReport,
   PaymentIntentResponse,
+  PromoCode,
   RevenueReport,
   ReviewsResponse,
   Room,
@@ -275,4 +276,27 @@ export async function reactivateStaff(id: string): Promise<{ user: User }> {
   return data
 }
 
+// --- Promo codes management ---
+
+export async function listPromoCodes(): Promise<{ promoCodes: PromoCode[] }> {
+  const { data } = await api.get<{ promoCodes: PromoCode[] }>('/promo-codes')
+  return data
+}
+
+export async function createPromoCode(input: {
+  code: string
+  discountPercent: number
+  validFrom: string
+  validTo: string
+  maxUses: number
+}): Promise<{ promoCode: PromoCode }> {
+  const { data } = await api.post<{ promoCode: PromoCode }>('/promo-codes', input)
+  return data
+}
+
+export async function deletePromoCode(id: string): Promise<void> {
+  await api.delete(`/promo-codes/${id}`)
+}
+
 export type { User }
+

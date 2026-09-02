@@ -134,3 +134,14 @@ export interface ReviewsResponse {
     user: { id: string; name: string }
   }>
 }
+
+export interface PromoCode {
+  id: string
+  code: string
+  discountPercent: number
+  validFrom: string
+  validTo: string
+  maxUses: number
+  usedCount: number
+}
+
