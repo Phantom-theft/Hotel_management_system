@@ -7,7 +7,7 @@ import {
   listStaff,
   reactivateStaff,
 } from '../../api/hotel'
-import { BookingListSkeleton } from '../../components/Skeletons'
+import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { toast } from '../../store/toastStore'
 import type { User, UserRole } from '../../types/api'
 
@@ -104,7 +104,7 @@ export function AdminStaffPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h2 className="font-display text-2xl">Team</h2>
+        <h2 className="font-display text-2xl">Staff</h2>
         {staffQuery.isLoading && <BookingListSkeleton count={3} />}
         <div className="overflow-x-auto rounded-xl border border-neutral-100 bg-white shadow-card">
           <table className="min-w-full text-left text-sm">

@@ -100,6 +100,11 @@ export async function getMyBookings(): Promise<BookingsResponse> {
   return data
 }
 
+export async function listAllBookings(): Promise<BookingsResponse> {
+  const { data } = await api.get<BookingsResponse>('/bookings/admin/all')
+  return data
+}
+
 export async function cancelBooking(id: string): Promise<CreateBookingResponse> {
   const { data } = await api.patch<CreateBookingResponse>(`/bookings/${id}/cancel`)
   return data

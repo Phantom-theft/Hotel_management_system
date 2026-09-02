@@ -46,6 +46,7 @@ function serializeBooking(booking: {
   expiresAt: Date | null;
   createdAt: Date;
   room?: Parameters<typeof serializeRoom>[0];
+  user?: { name: string; email: string };
 }) {
   return {
     id: booking.id,
@@ -59,6 +60,9 @@ function serializeBooking(booking: {
     expiresAt: booking.expiresAt?.toISOString() ?? null,
     createdAt: booking.createdAt.toISOString(),
     ...(booking.room ? { room: serializeRoom(booking.room) } : {}),
+    ...(booking.user
+      ? { guest: { name: booking.user.name, email: booking.user.email } }
+      : {}),
   };
 }
 
@@ -249,7 +253,15 @@ export async function createWalkInBooking(staffUserId: string, input: WalkInBook
 export async function listMyBookings(userId: string) {
   const bookings = await prisma.booking.findMany({
     where: { userId },
-    include: { room: { include: { roomType: true } } },
+    include: { room: { include: { roomType: true } }, user: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  return bookings.map(serializeBooking);
+}
+
+export async function listAllBookings() {
+  const bookings = await prisma.booking.findMany({
+    include: { room: { include: { roomType: true } }, user: true },
     orderBy: { createdAt: 'desc' },
   });
   return bookings.map(serializeBooking);

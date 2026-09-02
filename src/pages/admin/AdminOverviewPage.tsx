@@ -19,16 +19,16 @@ import {
   getRevenueReport,
   getTodaysBookings,
 } from '../../api/hotel'
-import { BookingTable } from '../../components/dashboard/BookingTable'
-import { DashboardCard, DashboardStatCard } from '../../components/dashboard/DashboardCards'
-import { BookingListSkeleton } from '../../components/Skeletons'
-import { useDashboardShell } from '../../contexts/DashboardShellContext'
+import { AdminBookingTable } from '../../components/admin/AdminBookingTable'
+import { AdminDashboardCard, AdminDashboardStatCard } from '../../components/admin/AdminDashboardCards'
+import { BookingListSkeleton } from '../../components/ui/Skeletons'
+import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 
 const CHART_NAVY = '#0F1E3C'
 const CHART_GOLD = '#C9A227'
 
 export function AdminOverviewPage() {
-  const { dateRange } = useDashboardShell()
+  const { dateRange } = useAdminDashboardShell()
   const { from, to } = dateRange
 
   const occupancy = useQuery({
@@ -76,7 +76,7 @@ export function AdminOverviewPage() {
         <BookingListSkeleton count={4} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <DashboardStatCard
+          <AdminDashboardStatCard
             featured
             label="Total revenue"
             value={
@@ -84,19 +84,19 @@ export function AdminOverviewPage() {
             }
             hint={`${from} – ${to}`}
           />
-          <DashboardStatCard
+          <AdminDashboardStatCard
             label="Occupancy rate"
             value={
               occupancy.data ? `${occupancy.data.overallOccupancyRate.toFixed(1)}%` : '—'
             }
             hint={`${occupancy.data?.totalRooms ?? 0} rooms`}
           />
-          <DashboardStatCard
+          <AdminDashboardStatCard
             label="Active bookings"
             value={activeBookings}
             hint="Excludes cancelled in range"
           />
-          <DashboardStatCard
+          <AdminDashboardStatCard
             label="Total rooms"
             value={occupancy.data ? String(occupancy.data.totalRooms) : '—'}
             hint="Property inventory"
@@ -105,7 +105,7 @@ export function AdminOverviewPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <DashboardCard
+        <AdminDashboardCard
           title="Revenue by room type"
           description={
             revenue.data
@@ -125,9 +125,9 @@ export function AdminOverviewPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </DashboardCard>
+        </AdminDashboardCard>
 
-        <DashboardCard
+        <AdminDashboardCard
           title="Occupancy snapshot"
           description={
             occupancy.data
@@ -157,10 +157,10 @@ export function AdminOverviewPage() {
               <span className="text-xs text-neutral-500">occupied</span>
             </div>
           </div>
-        </DashboardCard>
+        </AdminDashboardCard>
       </div>
 
-      <DashboardCard
+      <AdminDashboardCard
         title="Occupancy trend"
         description="Daily occupancy rate over the selected range"
       >
@@ -182,9 +182,9 @@ export function AdminOverviewPage() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </DashboardCard>
+      </AdminDashboardCard>
 
-      <DashboardCard
+      <AdminDashboardCard
         title="Today's activity"
         description={
           today.data
@@ -195,9 +195,9 @@ export function AdminOverviewPage() {
         {today.isLoading ? (
           <BookingListSkeleton count={3} />
         ) : (
-          <BookingTable bookings={recentBookings} emptyMessage="No arrivals or departures today." />
+          <AdminBookingTable bookings={recentBookings} emptyMessage="No arrivals or departures today." />
         )}
-      </DashboardCard>
+      </AdminDashboardCard>
     </div>
   )
 }

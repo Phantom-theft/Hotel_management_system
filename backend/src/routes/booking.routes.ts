@@ -13,6 +13,12 @@ router.patch('/:id/cancel', authenticate, validate(idParamSchema), bookingContro
 
 // Staff / admin operations
 router.get(
+  '/admin/all',
+  authenticate,
+  authorize(UserRole.admin),
+  bookingController.listAll,
+);
+router.get(
   '/today',
   authenticate,
   authorize(UserRole.staff, UserRole.admin),

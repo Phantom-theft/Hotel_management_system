@@ -1,5 +1,5 @@
 import { Quote } from 'lucide-react'
-import { StarRating } from '../StarRating'
+import { StarRating } from '../ui/StarRating'
 import { LANDING_SECTIONS } from '../../constants/landing'
 import { SectionHeading } from './SectionHeading'
 

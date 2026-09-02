@@ -1,0 +1,349 @@
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
+import { logout as logoutApi } from '../../api/hotel'
+import { LANDING_NAV_ANCHORS, LANDING_SECTION_IDS } from '../../constants/landing'
+import { useLandingScrollSpy } from '../../hooks/useLandingScrollSpy'
+import { useAuthNavigation } from '../../hooks/useAuthNavigation'
+import { clearSessionCache } from '../../queryClient'
+import { useAuthStore } from '../../store/authStore'
+import type { UserRole } from '../../types/api'
+import { scrollToSection, scrollToTop } from '../../utils/scroll'
+
+const appRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `text-sm font-medium tracking-wide transition ${
+    isActive ? 'text-accent' : 'text-neutral-600 hover:text-primary'
+  }`
+
+const mobileAppRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `block py-2 text-sm font-medium tracking-wide transition ${
+    isActive ? 'text-accent' : 'text-neutral-700 hover:text-primary'
+  }`
+
+function appNavLinksForRole(role: UserRole | undefined) {
+  switch (role) {
+    case 'admin':
+      return [
+        { to: '/admin', label: 'Dashboard' },
+        { to: '/admin/rooms', label: 'Rooms' },
+        { to: '/admin/bookings', label: 'Bookings' },
+        { to: '/admin/staff', label: 'Staff' },
+        { to: '/admin/reports', label: 'Reports' },
+      ]
+    case 'staff':
+      return [
+        { to: '/staff', label: 'Desk', end: true },
+        { to: '/rooms', label: 'Rooms' },
+      ]
+    case 'customer':
+      return [
+        { to: '/rooms', label: 'Rooms' },
+        { to: '/my-bookings', label: 'My bookings' },
+      ]
+    default:
+      return []
+  }
+}
+
+export function Header() {
+  const { isAuthenticated, user, clearAuth } = useAuthStore()
+  const { openAuth } = useAuthNavigation()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  const isHome = location.pathname === '/'
+  const showMarketingNav = isHome
+  const activeSection = useLandingScrollSpy(LANDING_SECTION_IDS, isHome)
+  const homeActive = isHome && activeSection === null
+  const appNavLinks = appNavLinksForRole(user?.role)
+
+  const isTransparent = isHome && !isScrolled && !mobileOpen
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (!isHome) return
+
+    const handleScroll = () => {
+      const hero = document.getElementById('hero')
+      if (hero) {
+        const rect = hero.getBoundingClientRect()
+        setIsScrolled(rect.bottom <= 70)
+      } else {
+        setIsScrolled(window.scrollY > 80)
+      }
+    }
+
+    const rafId = requestAnimationFrame(handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleScroll, { passive: true })
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [isHome])
+
+  async function handleLogout() {
+    try {
+      await logoutApi()
+    } catch {
+      // still clear local session
+    } finally {
+      clearSessionCache()
+      clearAuth()
+      navigate('/')
+    }
+  }
+
+  function closeMobile() {
+    setMobileOpen(false)
+  }
+
+  function goHome() {
+    closeMobile()
+    if (isHome) {
+      scrollToTop()
+    } else {
+      navigate('/')
+    }
+  }
+
+  function goToSection(sectionId: string) {
+    closeMobile()
+    if (isHome) {
+      scrollToSection(sectionId)
+    } else {
+      navigate('/', { state: { scrollTo: sectionId } })
+    }
+  }
+
+  const desktopNavItemClass = (active: boolean) =>
+    `text-sm font-medium tracking-wide transition-colors duration-300 ${
+      isTransparent
+        ? active
+          ? 'text-white font-semibold'
+          : 'text-white/80 hover:text-white'
+        : active
+          ? 'text-accent'
+          : 'text-neutral-600 hover:text-primary'
+    }`
+
+  const desktopRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `text-sm font-medium tracking-wide transition-colors duration-300 ${
+      isTransparent
+        ? isActive
+          ? 'text-white font-semibold'
+          : 'text-white/80 hover:text-white'
+        : isActive
+          ? 'text-accent'
+          : 'text-neutral-600 hover:text-primary'
+    }`
+
+  const mobileNavItemClass = (active: boolean) =>
+    `block w-full py-2 text-left text-sm font-medium tracking-wide transition ${
+      active ? 'text-accent' : 'text-neutral-700 hover:text-primary'
+    }`
+
+  return (
+    <header
+      className={`${
+        isHome ? 'fixed' : 'sticky'
+      } top-0 left-0 right-0 z-30 transition-all duration-300 ${
+        isTransparent
+          ? 'border-b border-transparent bg-transparent shadow-none'
+          : 'border-b border-neutral-100 bg-white/95 backdrop-blur shadow-sm'
+      }`}
+    >
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:py-4">
+        <Link
+          to="/"
+          onClick={(e) => {
+            if (isHome) {
+              e.preventDefault()
+              scrollToTop()
+            }
+          }}
+          className={`shrink-0 font-display text-xl font-extrabold tracking-tight sm:text-2xl transition-colors duration-300 ${
+            isTransparent ? 'text-white hover:text-white/90 drop-shadow-sm' : 'text-primary'
+          }`}
+        >
+          Harborlight
+        </Link>
+
+        <nav className="hidden flex-1 items-center justify-center gap-4 xl:gap-5 lg:flex" aria-label="Primary">
+          {showMarketingNav ? (
+            <>
+              <button type="button" onClick={goHome} className={desktopNavItemClass(homeActive)}>
+                Home
+              </button>
+              {isAuthenticated && (
+                <NavLink to="/rooms" className={desktopRouteLinkClass}>
+                  Rooms
+                </NavLink>
+              )}
+              {LANDING_NAV_ANCHORS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => goToSection(item.id)}
+                  className={desktopNavItemClass(activeSection === item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </>
+          ) : (
+            appNavLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={appRouteLinkClass}
+              >
+                {link.label}
+              </NavLink>
+            ))
+          )}
+        </nav>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          {!isAuthenticated ? (
+            showMarketingNav && (
+              <button
+                type="button"
+                onClick={() => openAuth('/login')}
+                className={`${desktopRouteLinkClass({ isActive: location.pathname === '/login' })} hidden sm:inline`}
+              >
+                Sign in
+              </button>
+            )
+          ) : (
+            <>
+              <span
+                className={`hidden max-w-[8rem] truncate text-sm lg:inline xl:max-w-none transition-colors duration-300 ${
+                  isTransparent ? 'text-white/80' : 'text-neutral-500'
+                }`}
+              >
+                {user?.name}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={`hidden rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-300 sm:inline-flex ${
+                  isTransparent
+                    ? 'border-white/30 text-white hover:bg-white/10'
+                    : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+                }`}
+              >
+                Sign out
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            className={`inline-flex items-center justify-center rounded-lg border p-2 transition-colors duration-300 lg:hidden ${
+              isTransparent
+                ? 'border-white/30 text-white hover:bg-white/10'
+                : 'border-neutral-200 text-primary hover:bg-neutral-50'
+            }`}
+            onClick={() => setMobileOpen((open) => !open)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+
+      {mobileOpen && (
+        <nav
+          id="mobile-nav"
+          className="border-t border-neutral-100 bg-white px-4 py-4 shadow-xl lg:hidden"
+          aria-label="Mobile"
+        >
+          <ul className="space-y-1">
+            {showMarketingNav ? (
+              <>
+                <li>
+                  <button type="button" onClick={goHome} className={mobileNavItemClass(homeActive)}>
+                    Home
+                  </button>
+                </li>
+                {isAuthenticated && (
+                  <li>
+                    <NavLink to="/rooms" className={mobileAppRouteLinkClass} onClick={closeMobile}>
+                      Rooms
+                    </NavLink>
+                  </li>
+                )}
+                {LANDING_NAV_ANCHORS.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => goToSection(item.id)}
+                      className={mobileNavItemClass(activeSection === item.id)}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </>
+            ) : (
+              appNavLinks.map((link) => (
+                <li key={link.to}>
+                  <NavLink
+                    to={link.to}
+                    end={link.end}
+                    className={mobileAppRouteLinkClass}
+                    onClick={closeMobile}
+                  >
+                    {link.label}
+                  </NavLink>
+                </li>
+              ))
+            )}
+          </ul>
+
+          <div className="mt-4 flex flex-col gap-2 border-t border-neutral-100 pt-4">
+            {!isAuthenticated ? (
+              showMarketingNav && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobile()
+                    openAuth('/login')
+                  }}
+                  className={mobileNavItemClass(location.pathname === '/login')}
+                >
+                  Sign in
+                </button>
+              )
+            ) : (
+              <>
+                <p className="px-0 py-1 text-sm text-neutral-500">{user?.name}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobile()
+                    void handleLogout()
+                  }}
+                  className="py-2 text-left text-sm font-medium text-neutral-700 hover:text-primary"
+                >
+                  Sign out
+                </button>
+              </>
+            )}
+          </div>
+        </nav>
+      )}
+    </header>
+  )
+}

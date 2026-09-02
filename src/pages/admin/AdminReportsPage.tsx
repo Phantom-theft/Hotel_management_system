@@ -12,7 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { getCancellationsReport, getOccupancyReport, getRevenueReport } from '../../api/hotel'
-import { BookingListSkeleton } from '../../components/Skeletons'
+import { BookingListSkeleton } from '../../components/ui/Skeletons'
 
 function defaultRange() {
   const to = new Date()

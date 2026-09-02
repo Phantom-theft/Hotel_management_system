@@ -50,6 +50,10 @@ export interface Booking {
   expiresAt: string | null
   createdAt: string
   room?: Room
+  guest?: {
+    name: string
+    email: string
+  }
 }
 
 export interface AuthResponse {

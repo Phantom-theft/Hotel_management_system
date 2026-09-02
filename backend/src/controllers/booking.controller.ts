@@ -28,6 +28,15 @@ export async function listMine(req: Request, res: Response, next: NextFunction):
   }
 }
 
+export async function listAll(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const bookings = await bookingService.listAllBookings();
+    res.json({ bookings });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function cancel(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {

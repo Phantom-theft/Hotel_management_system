@@ -1,20 +1,24 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { AppLayout } from './components/AppLayout'
 import { AuthLayout } from './components/AuthLayout'
-import { DashboardLayout } from './components/DashboardLayout'
 import { AuthTransitionRoot } from './components/auth/AuthTransitionRoot'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
-import { BookingDetailPage } from './pages/BookingDetailPage'
-import { BookingFlowPage } from './pages/BookingFlowPage'
-import { HomePage } from './pages/HomePage'
-import { LoginPage } from './pages/LoginPage'
-import { MyBookingsPage } from './pages/MyBookingsPage'
-import { NotFoundPage } from './pages/NotFoundPage'
-import { RegisterPage } from './pages/RegisterPage'
-import { RoomDetailPage } from './pages/RoomDetailPage'
-import { RoomsPage } from './pages/RoomsPage'
-import { StaffDashboardPage } from './pages/StaffDashboardPage'
+import { AdminDashboardLayout } from './components/admin/AdminDashboardLayout'
+import { AppLayout } from './components/layout/AppLayout'
+import { StaffDashboardLayout } from './components/staff/StaffDashboardLayout'
+import { LoginPage } from './pages/auth/LoginPage'
+import { RegisterPage } from './pages/auth/RegisterPage'
+import { GuestBookingDetailPage } from './pages/guest/GuestBookingDetailPage'
+import { GuestBookingFlowPage } from './pages/guest/GuestBookingFlowPage'
+import { GuestMyBookingsPage } from './pages/guest/GuestMyBookingsPage'
+import { GuestRoomDetailPage } from './pages/guest/GuestRoomDetailPage'
+import { GuestRoomsPage } from './pages/guest/GuestRoomsPage'
+import { HomePage } from './pages/public/HomePage'
+import { NotFoundPage } from './pages/public/NotFoundPage'
+import { StaffDashboardPage } from './pages/staff/StaffDashboardPage'
+import { StaffRoomDetailPage } from './pages/staff/StaffRoomDetailPage'
+import { StaffRoomsPage } from './pages/staff/StaffRoomsPage'
+import { AdminBookingsPage } from './pages/admin/AdminBookingsPage'
 import { AdminLayout } from './pages/admin/AdminLayout'
 import { AdminOverviewPage } from './pages/admin/AdminOverviewPage'
 import { AdminReportsPage } from './pages/admin/AdminReportsPage'
@@ -31,20 +35,21 @@ function AppRoutes() {
           <Route path="register" element={<RegisterPage />} />
         </Route>
 
-        {/* Staff/admin tooling — no site footer (must be before AppLayout catch-all) */}
-        <Route element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}>
-          <Route element={<DashboardLayout />}>
+        {/* Staff tooling — no site footer (must be before AppLayout catch-all) */}
+        <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
+          <Route element={<StaffDashboardLayout />}>
             <Route path="staff" element={<StaffDashboardPage />} />
-            <Route path="staff/rooms" element={<RoomsPage />} />
-            <Route path="staff/rooms/:id" element={<RoomDetailPage />} />
+            <Route path="staff/rooms" element={<StaffRoomsPage />} />
+            <Route path="staff/rooms/:id" element={<StaffRoomDetailPage />} />
           </Route>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route element={<DashboardLayout />}>
+          <Route element={<AdminDashboardLayout />}>
             <Route path="admin" element={<AdminLayout />}>
               <Route index element={<AdminOverviewPage />} />
               <Route path="rooms" element={<AdminRoomsPage />} />
+              <Route path="bookings" element={<AdminBookingsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="staff" element={<AdminStaffPage />} />
             </Route>
@@ -56,14 +61,14 @@ function AppRoutes() {
           <Route index element={<HomePage />} />
 
           <Route element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']} />}>
-            <Route path="rooms" element={<RoomsPage />} />
-            <Route path="rooms/:id" element={<RoomDetailPage />} />
-            <Route path="book" element={<BookingFlowPage />} />
+            <Route path="rooms" element={<GuestRoomsPage />} />
+            <Route path="rooms/:id" element={<GuestRoomDetailPage />} />
+            <Route path="book" element={<GuestBookingFlowPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
-            <Route path="my-bookings" element={<MyBookingsPage />} />
-            <Route path="my-bookings/:id" element={<BookingDetailPage />} />
+            <Route path="my-bookings" element={<GuestMyBookingsPage />} />
+            <Route path="my-bookings/:id" element={<GuestBookingDetailPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

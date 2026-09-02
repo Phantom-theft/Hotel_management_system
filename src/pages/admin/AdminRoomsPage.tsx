@@ -10,9 +10,9 @@ import {
   updateRoom,
   updateRoomType,
 } from '../../api/hotel'
-import { ImageField } from '../../components/ImageField'
-import { Modal } from '../../components/Modal'
-import { BookingListSkeleton } from '../../components/Skeletons'
+import { AdminImageField } from '../../components/admin/AdminImageField'
+import { Modal } from '../../components/ui/Modal'
+import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { toast } from '../../store/toastStore'
 import type { Room, RoomStatus, RoomType } from '../../types/api'
 
@@ -237,7 +237,7 @@ function RoomTypeSection({
           <input placeholder="Amenities (comma-separated)" value={amenities} onChange={(e) => setAmenities(e.target.value)} className="rounded-md border border-neutral-300 px-3 py-2" />
           <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="rounded-md border border-neutral-300 px-3 py-2 sm:col-span-2" rows={2} />
         </div>
-        <ImageField images={images} onChange={setImages} />
+        <AdminImageField images={images} onChange={setImages} />
         <div className="flex gap-2">
           <button type="submit" disabled={saveMut.isPending} className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-light disabled:opacity-60">
             {saveMut.isPending ? 'Saving…' : editing ? 'Update type' : 'Create type'}

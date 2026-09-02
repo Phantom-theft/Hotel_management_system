@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { ToastViewport } from './ToastViewport'
+import { ToastViewport } from './ui/ToastViewport'
 
 /** Bare layout for /login and /register — no site header or footer */
 export function AuthLayout() {
