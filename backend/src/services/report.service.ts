@@ -1,15 +1,16 @@
 import { BookingStatus, PaymentStatus, Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 import { AppError } from '../utils/helpers';
-import { parseDateParam } from '../utils/booking';
-import { decimalToNumber } from '../utils/booking';
+import { calculateNights, decimalToNumber, parseDateParam } from '../utils/booking';
 
 function parseRange(from?: string, to?: string) {
   if (!from || !to) {
     throw new AppError(400, 'from and to query params are required (ISO dates)');
   }
   const start = parseDateParam(from, 'from');
+  start.setUTCHours(0, 0, 0, 0);
   const end = parseDateParam(to, 'to');
+  end.setUTCHours(23, 59, 59, 999);
   if (end < start) {
     throw new AppError(400, 'to must be on or after from');
   }
@@ -101,11 +102,17 @@ export async function getRevenueReport(from?: string, to?: string) {
   });
 
   let totalRevenue = new Prisma.Decimal(0);
+  let roomNightsSold = 0;
+  const countedBookingIds = new Set<string>();
   const byRoomType = new Map<string, { roomTypeId: string; roomTypeName: string; revenue: Prisma.Decimal }>();
   const byDay = new Map<string, Prisma.Decimal>();
 
   for (const payment of payments) {
     totalRevenue = totalRevenue.add(payment.amount);
+    if (!countedBookingIds.has(payment.bookingId)) {
+      countedBookingIds.add(payment.bookingId);
+      roomNightsSold += calculateNights(payment.booking.checkIn, payment.booking.checkOut);
+    }
     const day = payment.createdAt.toISOString().slice(0, 10);
     byDay.set(day, (byDay.get(day) ?? new Prisma.Decimal(0)).add(payment.amount));
 
@@ -123,6 +130,7 @@ export async function getRevenueReport(from?: string, to?: string) {
     from: start.toISOString().slice(0, 10),
     to: end.toISOString().slice(0, 10),
     totalRevenue: decimalToNumber(totalRevenue),
+    roomNightsSold,
     byPeriod: [...byDay.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, revenue]) => ({ date, revenue: decimalToNumber(revenue) })),

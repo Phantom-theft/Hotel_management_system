@@ -13,7 +13,7 @@ export function AdminDashboardTopBar() {
   const showDateRange = adminDashboardShowsDateRange(pathname)
 
   return (
-    <header className="sticky top-0 z-30 border-b border-neutral-100 bg-neutral-50/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+    <header className="admin-print-hide sticky top-0 z-30 border-b border-neutral-100 bg-neutral-50/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button

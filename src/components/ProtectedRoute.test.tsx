@@ -46,7 +46,7 @@ function renderStaffRoute() {
         <Route path="/login" element={<div>Login page</div>} />
         <Route path="/rooms" element={<div>Rooms page</div>} />
         <Route path="/admin" element={<div>Admin page</div>} />
-        <Route element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
           <Route path="/staff" element={<div>Staff dashboard</div>} />
         </Route>
       </Routes>
@@ -122,6 +122,17 @@ describe('ProtectedRoute', () => {
     })
     renderStaffRoute()
     expectSingleText('Rooms page')
+    expect(screen.queryByText('Staff dashboard')).not.toBeInTheDocument()
+  })
+
+  it('blocks admin from /staff', () => {
+    useAuthStore.setState({
+      user: adminUser,
+      accessToken: 'token',
+      isAuthenticated: true,
+    })
+    renderStaffRoute()
+    expectSingleText('Admin page')
     expect(screen.queryByText('Staff dashboard')).not.toBeInTheDocument()
   })
 

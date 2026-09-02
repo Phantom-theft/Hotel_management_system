@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import { Star, User } from 'lucide-react'
 import { getRoomTypeReviews, listRoomTypes } from '../../api/hotel'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
@@ -11,25 +11,52 @@ export function AdminReviewsPage() {
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>('all')
   const [starFilter, setStarFilter] = useState<number | 'all'>('all')
 
-  // Pick first room type as active if selecting a specific one
-  const activeRoomTypeId = selectedRoomTypeId === 'all' && roomTypes.length > 0 ? roomTypes[0].id : selectedRoomTypeId
-
-  const reviewsQuery = useQuery({
-    queryKey: ['roomtype-reviews', activeRoomTypeId],
-    queryFn: () => (activeRoomTypeId && activeRoomTypeId !== 'all' ? getRoomTypeReviews(activeRoomTypeId, 1, 50) : null),
-    enabled: !!activeRoomTypeId && activeRoomTypeId !== 'all',
+  const allReviewQueries = useQueries({
+    queries: roomTypes.map((t) => ({
+      queryKey: ['roomtype-reviews', t.id],
+      queryFn: () => getRoomTypeReviews(t.id, 1, 50),
+      enabled: roomTypes.length > 0,
+    })),
   })
 
-  const reviews = reviewsQuery.data?.reviews ?? []
-  const avgRating = reviewsQuery.data?.averageRating ?? 0
-  const totalReviews = reviewsQuery.data?.total ?? 0
+  const singleReviewQuery = useQuery({
+    queryKey: ['roomtype-reviews', selectedRoomTypeId],
+    queryFn: () => getRoomTypeReviews(selectedRoomTypeId, 1, 50),
+    enabled: selectedRoomTypeId !== 'all',
+  })
+
+  const { reviews, avgRating, totalReviews, isLoading } = useMemo(() => {
+    if (selectedRoomTypeId === 'all') {
+      const allReviews = allReviewQueries.flatMap((q) => q.data?.reviews ?? [])
+      const total = allReviewQueries.reduce((sum, q) => sum + (q.data?.total ?? 0), 0)
+      const weightedSum = allReviewQueries.reduce((sum, q) => {
+        const data = q.data
+        if (!data || data.total === 0) return sum
+        return sum + data.averageRating * data.total
+      }, 0)
+      return {
+        reviews: allReviews.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        ),
+        avgRating: total > 0 ? weightedSum / total : 0,
+        totalReviews: total,
+        isLoading: allReviewQueries.some((q) => q.isLoading),
+      }
+    }
+
+    return {
+      reviews: singleReviewQuery.data?.reviews ?? [],
+      avgRating: singleReviewQuery.data?.averageRating ?? 0,
+      totalReviews: singleReviewQuery.data?.total ?? 0,
+      isLoading: singleReviewQuery.isLoading,
+    }
+  }, [selectedRoomTypeId, allReviewQueries, singleReviewQuery.data, singleReviewQuery.isLoading])
 
   const filteredReviews = useMemo(() => {
     if (starFilter === 'all') return reviews
     return reviews.filter((r) => r.rating === starFilter)
   }, [reviews, starFilter])
 
-  // Star rating distribution
   const ratingCounts = useMemo(() => {
     const counts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
     reviews.forEach((r) => {
@@ -40,7 +67,6 @@ export function AdminReviewsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h2 className="font-display text-2xl font-bold text-primary">Guest Satisfaction & Reviews</h2>
         <p className="text-xs text-neutral-500">
@@ -48,9 +74,22 @@ export function AdminReviewsPage() {
         </p>
       </div>
 
-      {/* Room Type Selector Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-neutral-100 pb-3">
         <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-2">Room Type:</span>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedRoomTypeId('all')
+            setStarFilter('all')
+          }}
+          className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            selectedRoomTypeId === 'all'
+              ? 'bg-primary text-white shadow-sm'
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+          }`}
+        >
+          All Room Types
+        </button>
         {roomTypes.map((t) => (
           <button
             key={t.id}
@@ -60,7 +99,7 @@ export function AdminReviewsPage() {
               setStarFilter('all')
             }}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-              activeRoomTypeId === t.id
+              selectedRoomTypeId === t.id
                 ? 'bg-primary text-white shadow-sm'
                 : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
             }`}
@@ -70,9 +109,7 @@ export function AdminReviewsPage() {
         ))}
       </div>
 
-      {/* Scorecards & Rating Breakdown */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: Scorecard */}
         <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-sm flex flex-col items-center justify-center text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Average Rating</p>
           <div className="mt-3 flex items-center gap-2 font-display text-5xl font-extrabold text-primary">
@@ -84,7 +121,6 @@ export function AdminReviewsPage() {
           </p>
         </div>
 
-        {/* Right: Star distribution bars */}
         <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-sm lg:col-span-2 space-y-2.5">
           <h3 className="font-display text-sm font-bold text-primary mb-3">Rating Breakdown</h3>
           {[5, 4, 3, 2, 1].map((star) => {
@@ -113,7 +149,6 @@ export function AdminReviewsPage() {
         </div>
       </div>
 
-      {/* Reviews List */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-lg font-bold text-primary">
@@ -130,7 +165,7 @@ export function AdminReviewsPage() {
           )}
         </div>
 
-        {reviewsQuery.isLoading ? (
+        {isLoading ? (
           <BookingListSkeleton count={3} />
         ) : filteredReviews.length === 0 ? (
           <div className="rounded-2xl border border-neutral-100 bg-white p-8 text-center text-sm text-neutral-500 shadow-sm">

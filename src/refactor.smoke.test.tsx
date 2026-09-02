@@ -30,7 +30,7 @@ vi.mock('./api/hotel', async (importOriginal) => {
       totalRooms: 5,
       daily: [],
     }),
-    getRevenueReport: vi.fn().mockResolvedValue({ totalRevenue: 0, daily: [] }),
+    getRevenueReport: vi.fn().mockResolvedValue({ totalRevenue: 0, roomNightsSold: 0, daily: [] }),
     getCancellationsReport: vi.fn().mockResolvedValue({
       totalBookings: 0,
       cancelledBookings: 0,
@@ -118,7 +118,7 @@ describe('refactor smoke — pages mount', () => {
         adminUser,
       ),
     )
-    expect(await screen.findByText('Total revenue')).toBeInTheDocument()
+    expect(await screen.findByText('Total Revenue')).toBeInTheDocument()
   })
 })
 

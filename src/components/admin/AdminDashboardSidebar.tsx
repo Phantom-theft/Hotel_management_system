@@ -90,21 +90,21 @@ export function AdminDashboardSidebar() {
 
   return (
     <>
-      <aside className="hidden h-dvh w-64 shrink-0 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:flex-col">
+      <aside className="admin-print-hide hidden h-dvh w-64 shrink-0 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:flex-col">
         {sidebarContent}
       </aside>
 
       {sidebarOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-primary/40 backdrop-blur-sm lg:hidden"
+          className="admin-print-hide fixed inset-0 z-40 bg-primary/40 backdrop-blur-sm lg:hidden"
           aria-label="Close menu overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 lg:hidden ${
+        className={`admin-print-hide fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 lg:hidden ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-hidden={!sidebarOpen}

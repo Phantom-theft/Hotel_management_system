@@ -36,6 +36,7 @@ import { AdminBookingTable } from '../../components/admin/AdminBookingTable'
 import { AdminDashboardCard, AdminDashboardStatCard } from '../../components/admin/AdminDashboardCards'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
+import { computeAdr, computeRevpar, formatHospitalityCurrency } from '../../utils/hospitalityMetrics'
 
 const CHART_NAVY = '#0F1E3C'
 const CHART_GOLD = '#C9A227'
@@ -61,25 +62,21 @@ export function AdminOverviewPage() {
 
   const loading = occupancy.isLoading || revenue.isLoading || cancellations.isLoading
 
-  const totalBookingsCount = cancellations.data?.totalBookings ?? 0
-  const cancelledCount = cancellations.data?.cancelledBookings ?? 0
-  const activeBookingsCount = Math.max(0, totalBookingsCount - cancelledCount)
-
-  // Hospitality core metrics: ADR & RevPAR
   const { adrFormatted, revparFormatted } = useMemo(() => {
     const totalRev = revenue.data?.totalRevenue ?? 0
-    const occRate = (occupancy.data?.overallOccupancyRate ?? 0) / 100
+    const roomNightsSold = revenue.data?.roomNightsSold ?? 0
+    const totalRooms = occupancy.data?.totalRooms ?? roomsQuery.data?.rooms?.length ?? 0
 
-    if (totalRev > 0 && activeBookingsCount > 0) {
-      const adr = totalRev / activeBookingsCount
-      const revpar = adr * occRate
-      return {
-        adrFormatted: `$${adr.toFixed(2)}`,
-        revparFormatted: `$${revpar.toFixed(2)}`,
-      }
+    return {
+      adrFormatted: formatHospitalityCurrency(computeAdr(totalRev, roomNightsSold)),
+      revparFormatted: formatHospitalityCurrency(computeRevpar(totalRev, totalRooms)),
     }
-    return { adrFormatted: '—', revparFormatted: '—' }
-  }, [revenue.data?.totalRevenue, occupancy.data?.overallOccupancyRate, activeBookingsCount])
+  }, [
+    revenue.data?.totalRevenue,
+    revenue.data?.roomNightsSold,
+    occupancy.data?.totalRooms,
+    roomsQuery.data?.rooms?.length,
+  ])
 
   // Room status counts
   const roomStats = useMemo(() => {
@@ -234,12 +231,12 @@ export function AdminOverviewPage() {
           <AdminDashboardStatCard
             label="Average Daily Rate (ADR)"
             value={adrFormatted}
-            hint="Avg revenue per booked reservation"
+            hint="Avg revenue per room-night sold"
           />
           <AdminDashboardStatCard
             label="RevPAR"
             value={revparFormatted}
-            hint="Revenue Per Available Room"
+            hint="Total revenue ÷ room inventory"
           />
         </div>
       )}

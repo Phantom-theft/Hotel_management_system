@@ -66,6 +66,52 @@
   }
 }
 
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .admin-print-hide {
+    display: none !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .folio-print-overlay,
+  .folio-print-overlay * {
+    visibility: visible;
+  }
+
+  .folio-print-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    background: white !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+
+  .folio-receipt {
+    position: static !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+}
+
 @utility font-display {
   font-family: var(--font-display);
   font-weight: 700;

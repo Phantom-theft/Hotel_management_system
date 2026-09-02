@@ -10,6 +10,7 @@ async function hash(password: string) {
 function daysFromNow(days: number) {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + days);
+  d.setUTCHours(12, 0, 0, 0);
   return d;
 }
 
@@ -156,13 +157,40 @@ async function main() {
 
   await Promise.all([
     prisma.payment.create({
-      data: { bookingId: bookings[0].id, amount: 360, status: PaymentStatus.paid, stripePaymentId: 'seed_pi_1' },
+      data: {
+        bookingId: bookings[0].id,
+        amount: 360,
+        status: PaymentStatus.paid,
+        stripePaymentId: 'seed_pi_1',
+        createdAt: daysFromNow(-8),
+      },
     }),
     prisma.payment.create({
-      data: { bookingId: bookings[2].id, amount: 660, status: PaymentStatus.paid, stripePaymentId: 'seed_pi_2' },
+      data: {
+        bookingId: bookings[1].id,
+        amount: 360,
+        status: PaymentStatus.paid,
+        stripePaymentId: 'seed_pi_checked_in',
+        createdAt: daysFromNow(-1),
+      },
     }),
     prisma.payment.create({
-      data: { bookingId: bookings[3].id, amount: 440, status: PaymentStatus.pending, stripePaymentId: 'seed_pi_3' },
+      data: {
+        bookingId: bookings[2].id,
+        amount: 660,
+        status: PaymentStatus.paid,
+        stripePaymentId: 'seed_pi_2',
+        createdAt: daysFromNow(-3),
+      },
+    }),
+    prisma.payment.create({
+      data: {
+        bookingId: bookings[3].id,
+        amount: 440,
+        status: PaymentStatus.pending,
+        stripePaymentId: 'seed_pi_3',
+        createdAt: daysFromNow(0),
+      },
     }),
   ]);
 

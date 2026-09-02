@@ -103,6 +103,7 @@ export interface RevenueReport {
   from: string
   to: string
   totalRevenue: number
+  roomNightsSold: number
   byPeriod: Array<{ date: string; revenue: number }>
   byRoomType: Array<{ roomTypeId: string; roomTypeName: string; revenue: number }>
 }

@@ -27,6 +27,8 @@ function appNavLinksForRole(role: UserRole | undefined) {
         { to: '/admin', label: 'Dashboard' },
         { to: '/admin/rooms', label: 'Rooms' },
         { to: '/admin/bookings', label: 'Bookings' },
+        { to: '/admin/promotions', label: 'Promotions' },
+        { to: '/admin/reviews', label: 'Reviews' },
         { to: '/admin/staff', label: 'Staff' },
         { to: '/admin/reports', label: 'Reports' },
       ]

@@ -64,12 +64,12 @@ export function AdminBookingDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 p-4 backdrop-blur-sm"
+      className="folio-print-overlay fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         ref={printRef}
-        className="w-full max-w-2xl rounded-2xl border border-neutral-100 bg-white p-6 shadow-2xl transition-all"
+        className="folio-receipt w-full max-w-2xl rounded-2xl border border-neutral-100 bg-white p-6 shadow-2xl transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

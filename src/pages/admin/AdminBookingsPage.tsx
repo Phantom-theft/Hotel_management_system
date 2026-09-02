@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search, UserPlus, X } from 'lucide-react'
 import {
-  cancelBooking,
   checkInBooking,
   checkOutBooking,
   getTodaysBookings,
   listAllBookings,
   listAllRooms,
+  staffCancelBooking,
 } from '../../api/hotel'
 import { AdminBookingDetailModal } from '../../components/admin/AdminBookingDetailModal'
 import { AdminBookingTable } from '../../components/admin/AdminBookingTable'
@@ -83,7 +83,7 @@ export function AdminBookingsPage() {
   })
 
   const cancelMut = useMutation({
-    mutationFn: (id: string) => cancelBooking(id),
+    mutationFn: (id: string) => staffCancelBooking(id),
     onSuccess: () => {
       toast('Booking cancelled successfully', 'success')
       setCancellingBookingId(null)

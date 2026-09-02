@@ -111,6 +111,11 @@ export async function cancelBooking(id: string): Promise<CreateBookingResponse> 
   return data
 }
 
+export async function staffCancelBooking(id: string): Promise<CreateBookingResponse> {
+  const { data } = await api.patch<CreateBookingResponse>(`/bookings/${id}/staff-cancel`)
+  return data
+}
+
 export async function createPaymentIntent(bookingId: string): Promise<PaymentIntentResponse> {
   const { data } = await api.post<PaymentIntentResponse>('/payments/create-intent', {
     bookingId,
