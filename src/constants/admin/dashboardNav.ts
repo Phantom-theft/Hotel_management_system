@@ -26,8 +26,8 @@ export const ADMIN_DASHBOARD_NAV: AdminDashboardNavItem[] = [
   { to: '/admin/reports', label: 'Reports', icon: BarChart3 },
 ]
 
-export function adminDashboardTitleForPath(pathname: string): string {
-  if (pathname === '/admin' || pathname === '/admin/') return 'Dashboard'
+export function adminDashboardTitleForPath(pathname: string): string | null {
+  if (pathname === '/admin' || pathname === '/admin/') return null
   if (pathname.startsWith('/admin/rooms')) return 'Rooms'
   if (pathname.startsWith('/admin/bookings')) return 'Bookings'
   if (pathname.startsWith('/admin/promotions')) return 'Promotions'
@@ -35,9 +35,5 @@ export function adminDashboardTitleForPath(pathname: string): string {
   if (pathname.startsWith('/admin/staff')) return 'Staff'
   if (pathname.startsWith('/admin/reports')) return 'Reports'
   return 'Dashboard'
-}
-
-export function adminDashboardShowsDateRange(pathname: string): boolean {
-  return pathname === '/admin' || pathname.startsWith('/admin/reports')
 }
 
