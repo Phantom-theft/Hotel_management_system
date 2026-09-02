@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { RoomCard } from '../components/RoomCard'
 import { EmptyState } from '../components/EmptyState'
 import { RoomGridSkeleton } from '../components/Skeletons'
+import { useRoomsPaths } from '../hooks/useRoomsPaths'
 import { useRoomSearch } from '../hooks/useRoomSearch'
 
 function defaultCheckIn() {
@@ -19,6 +20,7 @@ function defaultCheckOut() {
 
 export function RoomsPage() {
   const [params, setParams] = useSearchParams()
+  const { isDashboardRooms, detailPath } = useRoomsPaths()
   const [checkIn, setCheckIn] = useState(params.get('checkIn') ?? defaultCheckIn())
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? defaultCheckOut())
   const [guests, setGuests] = useState(Number(params.get('guests') ?? 2))
@@ -51,17 +53,26 @@ export function RoomsPage() {
   }
 
   return (
-    <div className="space-y-10">
-      <div className="max-w-2xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">Availability</p>
-        <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">
-          Find a room
-        </h1>
-        <p className="mt-2 text-neutral-600">
+    <div className={isDashboardRooms ? 'space-y-6' : 'space-y-10'}>
+      {!isDashboardRooms && (
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">Availability</p>
+          <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">
+            Find a room
+          </h1>
+          <p className="mt-2 text-neutral-600">
+            Search by dates, guests, and room type. Results exclude overlapping reservations and
+            maintenance rooms.
+          </p>
+        </div>
+      )}
+
+      {isDashboardRooms && (
+        <p className="text-sm text-neutral-600">
           Search by dates, guests, and room type. Results exclude overlapping reservations and
           maintenance rooms.
         </p>
-      </div>
+      )}
 
       <form
         onSubmit={onSearch}
@@ -174,6 +185,11 @@ export function RoomsPage() {
                   checkIn={checkIn}
                   checkOut={checkOut}
                   guests={guests}
+                  detailPath={detailPath(room.id, new URLSearchParams({
+                    checkIn,
+                    checkOut,
+                    guests: String(guests),
+                  }).toString())}
                 />
               ))}
             </div>

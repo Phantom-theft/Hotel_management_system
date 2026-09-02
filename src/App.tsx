@@ -35,6 +35,8 @@ function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={['staff', 'admin']} />}>
           <Route element={<DashboardLayout />}>
             <Route path="staff" element={<StaffDashboardPage />} />
+            <Route path="staff/rooms" element={<RoomsPage />} />
+            <Route path="staff/rooms/:id" element={<RoomDetailPage />} />
           </Route>
         </Route>
 

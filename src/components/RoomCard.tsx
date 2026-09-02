@@ -6,6 +6,7 @@ interface RoomCardProps {
   checkIn?: string
   checkOut?: string
   guests?: number
+  detailPath?: string
 }
 
 const statusStyles: Record<string, string> = {
@@ -21,7 +22,7 @@ const placeholders = [
   'linear-gradient(160deg, #2563eb 0%, #0f1e3c 55%, #1e3a6e 100%)',
 ]
 
-export function RoomCard({ room, checkIn, checkOut, guests }: RoomCardProps) {
+export function RoomCard({ room, checkIn, checkOut, guests, detailPath }: RoomCardProps) {
   const type = room.roomType
   const image = type?.images?.[0]
   const placeholder = placeholders[room.roomNumber.charCodeAt(0) % placeholders.length]
@@ -93,7 +94,7 @@ export function RoomCard({ room, checkIn, checkOut, guests }: RoomCardProps) {
         </div>
 
         <Link
-          to={`/rooms/${room.id}${qs ? `?${qs}` : ''}`}
+          to={detailPath ?? `/rooms/${room.id}${qs ? `?${qs}` : ''}`}
           className="inline-flex text-sm font-semibold text-accent hover:underline"
         >
           View details →

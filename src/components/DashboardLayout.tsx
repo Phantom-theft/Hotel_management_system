@@ -1,16 +1,28 @@
 import { Outlet } from 'react-router-dom'
-import { Header } from './Header'
-import { ToastViewport } from './ToastViewport'
+import { DashboardShellProvider } from '../contexts/DashboardShellContext'
+import { DashboardSidebar, useCloseSidebarOnNavigate } from './dashboard/DashboardSidebar'
+import { DashboardTopBar } from './dashboard/DashboardTopBar'
 
-/** Internal staff/admin routes — header only, no site footer */
+function DashboardShell() {
+  useCloseSidebarOnNavigate()
+
+  return (
+    <div className="min-h-dvh bg-neutral-50">
+      <DashboardSidebar />
+      <div className="lg:pl-64">
+        <DashboardTopBar />
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}
+
 export function DashboardLayout() {
   return (
-    <div className="relative z-10 flex min-h-screen flex-col overflow-x-hidden text-neutral-900">
-      <ToastViewport />
-      <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-        <Outlet />
-      </main>
-    </div>
+    <DashboardShellProvider>
+      <DashboardShell />
+    </DashboardShellProvider>
   )
 }

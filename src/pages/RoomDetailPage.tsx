@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getRoomTypeReviews, searchRooms } from '../api/hotel'
 import { AvailabilityCalendar } from '../components/AvailabilityCalendar'
 import { RatingBadge, StarRating } from '../components/StarRating'
+import { useRoomsPaths } from '../hooks/useRoomsPaths'
 import { useRoomAvailability } from '../hooks/useRoomAvailability'
 import { useAuthStore } from '../store/authStore'
 import { useBookingFlowStore } from '../store/bookingFlowStore'
@@ -36,6 +37,7 @@ export function RoomDetailPage() {
   const setDraft = useBookingFlowStore((s) => s.setDraft)
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const { listPath } = useRoomsPaths()
 
   const [calendarMonth] = useState(() => new Date())
 
@@ -84,7 +86,7 @@ export function RoomDetailPage() {
     return (
       <div className="space-y-3">
         <p className="text-neutral-700">Room not found or not available for the selected dates.</p>
-        <Link to="/rooms" className="font-semibold text-accent hover:underline">
+        <Link to={listPath} className="font-semibold text-accent hover:underline">
           ← Back to rooms
         </Link>
       </div>
@@ -93,7 +95,7 @@ export function RoomDetailPage() {
 
   return (
     <div className="space-y-8">
-      <Link to="/rooms" className="text-sm font-semibold text-accent hover:underline">
+      <Link to={listPath} className="text-sm font-semibold text-accent hover:underline">
         ← Back to rooms
       </Link>
 

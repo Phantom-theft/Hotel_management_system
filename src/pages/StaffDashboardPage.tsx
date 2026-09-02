@@ -1,3 +1,4 @@
+import { BedDouble } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -7,6 +8,7 @@ import {
   getTodaysBookings,
   listAllRooms,
 } from '../api/hotel'
+import { DashboardCard, DashboardStatCard } from '../components/dashboard/DashboardCards'
 import { BookingListSkeleton } from '../components/Skeletons'
 import { StatusBadge } from '../components/StatusBadge'
 import { toast } from '../store/toastStore'
@@ -23,6 +25,16 @@ export function StaffDashboardPage() {
   const queryClient = useQueryClient()
   const todayQuery = useQuery({ queryKey: ['bookings-today'], queryFn: getTodaysBookings })
   const roomsQuery = useQuery({ queryKey: ['rooms-admin-all'], queryFn: listAllRooms })
+
+  const rooms = roomsQuery.data?.rooms ?? []
+  const checkIns = todayQuery.data?.checkIns ?? []
+  const checkOuts = todayQuery.data?.checkOuts ?? []
+
+  const roomStats = useMemo(() => {
+    const occupied = rooms.filter((r) => r.status === 'occupied').length
+    const available = rooms.filter((r) => r.status === 'available').length
+    return { occupied, available }
+  }, [rooms])
 
   const checkInMut = useMutation({
     mutationFn: checkInBooking,
@@ -57,48 +69,74 @@ export function StaffDashboardPage() {
   })
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold text-primary">Staff desk</h1>
-        <p className="mt-1 text-neutral-600">
-          Today&apos;s arrivals and departures, walk-ins, and live room status.
-        </p>
-      </div>
+    <div className="space-y-6">
+      {todayQuery.isLoading || roomsQuery.isLoading ? (
+        <BookingListSkeleton count={4} />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardStatCard
+            featured
+            label="Today's check-ins"
+            value={String(checkIns.length)}
+            hint={todayQuery.data?.date}
+          />
+          <DashboardStatCard
+            label="Today's check-outs"
+            value={String(checkOuts.length)}
+            hint="Scheduled departures"
+          />
+          <DashboardStatCard
+            label="Occupied rooms"
+            value={String(roomStats.occupied)}
+            hint="Currently in-house"
+          />
+          <DashboardStatCard
+            label="Available rooms"
+            value={String(roomStats.available)}
+            hint="Ready to assign"
+          />
+        </div>
+      )}
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <TodayList
+      <div className="grid gap-6 lg:grid-cols-2">
+        <StaffTodayCard
           title="Check-ins today"
           empty="No arrivals scheduled."
           loading={todayQuery.isLoading}
-          bookings={todayQuery.data?.checkIns ?? []}
+          bookings={checkIns}
           actionLabel="Check in"
           onAction={(id) => checkInMut.mutate(id)}
           busy={checkInMut.isPending}
           showAction={(b) => b.status === 'confirmed'}
         />
-        <TodayList
+        <StaffTodayCard
           title="Check-outs today"
           empty="No departures scheduled."
           loading={todayQuery.isLoading}
-          bookings={todayQuery.data?.checkOuts ?? []}
+          bookings={checkOuts}
           actionLabel="Check out"
           onAction={(id) => checkOutMut.mutate(id)}
           busy={checkOutMut.isPending}
           showAction={(b) => b.status === 'checked_in'}
         />
-      </section>
+      </div>
 
-      <WalkInForm rooms={roomsQuery.data?.rooms ?? []} onCreated={() => {
-        void queryClient.invalidateQueries({ queryKey: ['bookings-today'] })
-        void queryClient.invalidateQueries({ queryKey: ['rooms-admin-all'] })
-      }} />
+      <WalkInForm
+        rooms={rooms}
+        onCreated={() => {
+          void queryClient.invalidateQueries({ queryKey: ['bookings-today'] })
+          void queryClient.invalidateQueries({ queryKey: ['rooms-admin-all'] })
+        }}
+      />
 
-      <RoomStatusBoard rooms={roomsQuery.data?.rooms ?? []} loading={roomsQuery.isLoading} />
+      <DashboardCard title="Room status board" description="Live floor-by-floor availability">
+        <RoomStatusBoard rooms={rooms} loading={roomsQuery.isLoading} />
+      </DashboardCard>
     </div>
   )
 }
 
-function TodayList({
+function StaffTodayCard({
   title,
   empty,
   loading,
@@ -118,39 +156,74 @@ function TodayList({
   showAction: (b: Booking) => boolean
 }) {
   return (
-    <div className="rounded-xl border border-neutral-100 bg-white p-4 shadow-card">
-      <h2 className="font-display text-xl">{title}</h2>
-      {loading && <div className="mt-3"><BookingListSkeleton count={2} /></div>}
-      {!loading && bookings.length === 0 && <p className="mt-3 text-sm text-neutral-500">{empty}</p>}
-      <ul className="mt-3 space-y-2">
-        {bookings.map((b) => (
-          <li
-            key={b.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-100 px-3 py-2"
-          >
-            <div>
-              <p className="text-sm font-medium text-neutral-900">
-                {b.room?.roomType?.name ?? 'Room'} · #{b.room?.roomNumber ?? '—'}
-              </p>
-              <p className="text-xs text-neutral-500">{formatStay(b.checkIn, b.checkOut)}</p>
-              <div className="mt-1">
-                <StatusBadge status={b.status} />
-              </div>
-            </div>
-            {showAction(b) && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => onAction(b.id)}
-                className="rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-light disabled:opacity-60"
-              >
-                {actionLabel}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <DashboardCard title={title}>
+      {loading && <BookingListSkeleton count={2} />}
+      {!loading && bookings.length === 0 && (
+        <p className="py-6 text-center text-sm text-neutral-500">{empty}</p>
+      )}
+      {!loading && bookings.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-left">
+            <thead>
+              <tr className="border-b border-neutral-100 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <th className="px-3 py-2">Room</th>
+                <th className="px-3 py-2">Stay</th>
+                <th className="px-3 py-2">Amount</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((booking) => {
+                const roomLabel = booking.room?.roomNumber ?? '—'
+                const typeName = booking.room?.roomType?.name ?? 'Room'
+                return (
+                  <tr
+                    key={booking.id}
+                    className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/80"
+                  >
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-primary">
+                          <BedDouble className="h-4 w-4" aria-hidden />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-primary">{typeName}</p>
+                          <p className="text-xs text-neutral-500">#{roomLabel}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-xs text-neutral-600">
+                      {formatStay(booking.checkIn, booking.checkOut)}
+                    </td>
+                    <td className="px-3 py-3 text-sm font-semibold text-primary">
+                      ${booking.totalPrice.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <StatusBadge status={booking.status} />
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      {showAction(booking) ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => onAction(booking.id)}
+                          className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-light disabled:opacity-60"
+                        >
+                          {actionLabel}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-neutral-400">—</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </DashboardCard>
   )
 }
 
@@ -207,12 +280,11 @@ function WalkInForm({ rooms, onCreated }: { rooms: Room[]; onCreated: () => void
   }
 
   return (
-    <section className="rounded-xl border border-neutral-100 bg-white p-5 shadow-card">
-      <h2 className="font-display text-xl">Walk-in booking</h2>
-      <p className="mt-1 text-sm text-neutral-500">
-        Creates a <strong>confirmed</strong> booking immediately — payment is taken at the desk.
-      </p>
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
+    <DashboardCard
+      title="Walk-in booking"
+      description="Creates a confirmed booking immediately — payment is taken at the desk."
+    >
+      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm sm:col-span-2">
           <span className="mb-1 block text-neutral-600">Room</span>
           <select
@@ -263,7 +335,7 @@ function WalkInForm({ rooms, onCreated }: { rooms: Room[]; onCreated: () => void
           </button>
         </div>
       </form>
-    </section>
+    </DashboardCard>
   )
 }
 
@@ -278,17 +350,21 @@ function RoomStatusBoard({ rooms, loading }: { rooms: Room[]; loading: boolean }
     return [...map.entries()].sort((a, b) => a[0] - b[0])
   }, [rooms])
 
+  if (loading) {
+    return <BookingListSkeleton count={3} />
+  }
+
+  if (rooms.length === 0) {
+    return <p className="text-sm text-neutral-500">No rooms found. Ask an admin to create inventory.</p>
+  }
+
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="font-display text-xl">Room status board</h2>
-        <div className="flex gap-3 text-xs text-neutral-600">
-          <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-success" /> Available</span>
-          <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-amber-400" /> Occupied</span>
-          <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-neutral-400" /> Maintenance</span>
-        </div>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 text-xs text-neutral-600">
+        <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-success" /> Available</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-amber-400" /> Occupied</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-neutral-400" /> Maintenance</span>
       </div>
-      {loading && <BookingListSkeleton count={3} />}
       {byFloor.map(([floor, floorRooms]) => (
         <div key={floor}>
           <p className="mb-2 text-sm font-medium text-neutral-500">Floor {floor}</p>
@@ -309,9 +385,6 @@ function RoomStatusBoard({ rooms, loading }: { rooms: Room[]; loading: boolean }
           </div>
         </div>
       ))}
-      {!loading && rooms.length === 0 && (
-        <p className="text-sm text-neutral-500">No rooms found. Ask an admin to create inventory.</p>
-      )}
-    </section>
+    </div>
   )
 }
