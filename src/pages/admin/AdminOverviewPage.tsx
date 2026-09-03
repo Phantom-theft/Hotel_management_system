@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Bar,
@@ -12,7 +11,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Plus } from 'lucide-react'
 import {
   getCancellationsReport,
   getOccupancyReport,
@@ -22,7 +20,6 @@ import {
 } from '../../api/hotel'
 import { AdminBookingTable } from '../../components/admin/AdminBookingTable'
 import { AdminDashboardCard, AdminDashboardStatCard } from '../../components/admin/AdminDashboardCards'
-import { AdminDateRangePicker } from '../../components/admin/AdminDateRangePicker'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 import { computeAdr, computeRevpar, formatHospitalityCurrency } from '../../utils/hospitalityMetrics'
@@ -93,27 +90,6 @@ export function AdminOverviewPage() {
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Overview</h2>
-          <p className="mt-0.5 text-sm text-neutral-400">Operations and revenue at a glance</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-          <Link
-            to="/admin/bookings"
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-white transition hover:bg-primary-light"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Walk-in
-          </Link>
-          <QuickLink to="/admin/rooms" label="Rooms" />
-          <QuickLink to="/admin/promotions" label="Promotions" />
-          <QuickLink to="/admin/reviews" label="Reviews" />
-          <AdminDateRangePicker className="ml-1" />
-        </div>
-      </header>
-
       {loading ? (
         <BookingListSkeleton count={4} />
       ) : (
@@ -262,17 +238,6 @@ export function AdminOverviewPage() {
         )}
       </AdminDashboardCard>
     </div>
-  )
-}
-
-function QuickLink({ to, label }: { to: string; label: string }) {
-  return (
-    <Link
-      to={to}
-      className="rounded-full px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
-    >
-      {label}
-    </Link>
   )
 }
 
