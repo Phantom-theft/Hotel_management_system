@@ -1,14 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import {
-  Activity,
-  BedDouble,
-  LayoutDashboard,
-  Menu,
-  Percent,
-  Star,
-  UserPlus,
-  type LucideIcon,
-} from 'lucide-react'
+import { LayoutDashboard, Menu } from 'lucide-react'
 import { adminDashboardTitleForPath } from '../../constants/admin/dashboardNav'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 import { AdminDateRangePicker } from './AdminDateRangePicker'
@@ -41,8 +32,7 @@ export function AdminDashboardTopBar() {
                 <div>
                   <div className="flex items-center gap-2.5">
                     <h1 className="text-xl font-semibold tracking-tight text-neutral-900">Overview</h1>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                      <Activity className="h-3 w-3" aria-hidden />
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
                       Live
                     </span>
                   </div>
@@ -55,14 +45,13 @@ export function AdminDashboardTopBar() {
               <div className="inline-flex items-center gap-0.5 rounded-full border border-neutral-200/80 bg-white p-1 shadow-sm">
                 <Link
                   to="/admin/bookings"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-medium text-white transition hover:bg-primary-light"
+                  className="inline-flex items-center rounded-full bg-primary px-3.5 py-1.5 text-xs font-medium text-white transition hover:bg-primary-light"
                 >
-                  <UserPlus className="h-3.5 w-3.5" aria-hidden />
                   Walk-in
                 </Link>
-                <HeaderNavLink to="/admin/rooms" icon={BedDouble} label="Rooms" iconClass="text-blue-500" />
-                <HeaderNavLink to="/admin/promotions" icon={Percent} label="Promotions" iconClass="text-violet-500" />
-                <HeaderNavLink to="/admin/reviews" icon={Star} label="Reviews" iconClass="text-amber-500" />
+                <HeaderNavLink to="/admin/rooms" label="Rooms" />
+                <HeaderNavLink to="/admin/promotions" label="Promotions" />
+                <HeaderNavLink to="/admin/reviews" label="Reviews" />
               </div>
 
               <AdminDateRangePicker />
@@ -94,22 +83,17 @@ export function AdminDashboardTopBar() {
 
 function HeaderNavLink({
   to,
-  icon: Icon,
   label,
-  iconClass = 'text-neutral-400',
 }: {
   to: string
-  icon: LucideIcon
   label: string
-  iconClass?: string
 }) {
   return (
     <Link
       to={to}
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+      className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
     >
-      <Icon className={`h-3.5 w-3.5 shrink-0 ${iconClass}`} aria-hidden />
-      <span>{label}</span>
+      {label}
     </Link>
   )
 }
