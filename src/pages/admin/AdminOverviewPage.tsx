@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -12,18 +12,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import {
-  BedDouble,
-  CalendarCheck,
-  CalendarDays,
-  CheckCircle2,
-  Clock,
-  Percent,
-  PlusCircle,
-  Star,
-  TrendingUp,
-  Wrench,
-} from 'lucide-react'
+import { Plus } from 'lucide-react'
 import {
   getCancellationsReport,
   getOccupancyReport,
@@ -38,8 +27,8 @@ import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 import { computeAdr, computeRevpar, formatHospitalityCurrency } from '../../utils/hospitalityMetrics'
 
-const CHART_NAVY = '#0F1E3C'
-const CHART_GOLD = '#C9A227'
+const CHART_PRIMARY = '#0F1E3C'
+const CHART_MUTED = '#d6d3d1'
 
 export function AdminOverviewPage() {
   const { dateRange } = useAdminDashboardShell()
@@ -103,54 +92,32 @@ export function AdminOverviewPage() {
   const totalRooms = roomStats.total || occupancy.data?.totalRooms || 0
 
   return (
-    <div className="space-y-8">
-      {/* Page header + quick actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-10">
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display text-xl font-bold text-primary sm:text-2xl">
-            Property Overview
-          </h2>
-          <p className="mt-1 text-sm text-neutral-500">Live operations and revenue performance</p>
+          <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Overview</h2>
+          <p className="mt-0.5 text-sm text-neutral-400">Operations and revenue at a glance</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
           <Link
             to="/admin/bookings"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-light"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-white transition hover:bg-primary-light"
           >
-            <PlusCircle className="h-4 w-4" />
-            New Walk-in
+            <Plus className="h-3.5 w-3.5" />
+            Walk-in
           </Link>
-          <Link
-            to="/admin/rooms"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50"
-          >
-            <BedDouble className="h-4 w-4 text-neutral-500" />
-            Rooms
-          </Link>
-          <Link
-            to="/admin/promotions"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50"
-          >
-            <Percent className="h-4 w-4 text-neutral-500" />
-            Promotions
-          </Link>
-          <Link
-            to="/admin/reviews"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50"
-          >
-            <Star className="h-4 w-4 text-amber-500" />
-            Reviews
-          </Link>
-          <div className="hidden h-6 w-px bg-neutral-200 sm:block" aria-hidden />
-          <AdminDateRangePicker />
+          <QuickLink to="/admin/rooms" label="Rooms" />
+          <QuickLink to="/admin/promotions" label="Promotions" />
+          <QuickLink to="/admin/reviews" label="Reviews" />
+          <AdminDateRangePicker className="ml-1" />
         </div>
-      </div>
+      </header>
 
-      {/* Revenue KPIs */}
       {loading ? (
         <BookingListSkeleton count={4} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <AdminDashboardStatCard
             featured
             label="Total Revenue"
@@ -159,158 +126,119 @@ export function AdminOverviewPage() {
                 ? `$${revenue.data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : '—'
             }
-            hint="Revenue for selected period"
+            hint="Selected period"
           />
           <AdminDashboardStatCard
-            label="Occupancy Rate"
+            label="Occupancy"
             value={occupancy.data ? `${occupancy.data.overallOccupancyRate.toFixed(1)}%` : '—'}
-            hint={`${totalRooms} inventory rooms`}
+            hint={`${totalRooms} rooms`}
           />
-          <AdminDashboardStatCard
-            label="Average Daily Rate (ADR)"
-            value={adrFormatted}
-            hint="Avg revenue per room-night sold"
-          />
-          <AdminDashboardStatCard
-            label="RevPAR"
-            value={revparFormatted}
-            hint="Total revenue ÷ room inventory"
-          />
+          <AdminDashboardStatCard label="ADR" value={adrFormatted} hint="Per room-night sold" />
+          <AdminDashboardStatCard label="RevPAR" value={revparFormatted} hint="Per room in inventory" />
         </div>
       )}
 
-      {/* Live status + occupancy snapshot */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <AdminDashboardCard
-          title="Live room status"
-          description="Real-time floor inventory"
-          className="lg:col-span-2"
-        >
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-neutral-100 bg-neutral-100 sm:grid-cols-3">
-            <RoomStatusCell
-              icon={<BedDouble className="h-4 w-4 text-primary" />}
-              label="Total Rooms"
-              value={totalRooms || '—'}
-              tone="neutral"
-            />
-            <RoomStatusCell
-              icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-              label="Available"
-              value={roomStats.available}
-              tone="emerald"
-            />
-            <RoomStatusCell
-              icon={<CalendarCheck className="h-4 w-4 text-blue-600" />}
-              label="Occupied"
-              value={roomStats.occupied}
-              tone="blue"
-            />
-            <RoomStatusCell
-              icon={<Wrench className="h-4 w-4 text-amber-600" />}
-              label="Maintenance"
-              value={roomStats.maintenance}
-              tone="amber"
-            />
-            <RoomStatusCell
-              icon={<Clock className="h-4 w-4 text-primary" />}
-              label="Check-ins Today"
-              value={today.data?.checkIns.length ?? 0}
-              tone="neutral"
-            />
-            <RoomStatusCell
-              icon={<CalendarDays className="h-4 w-4 text-neutral-500" />}
-              label="Check-outs Today"
-              value={today.data?.checkOuts.length ?? 0}
-              tone="neutral"
-            />
+      <div className="grid gap-3 lg:grid-cols-3">
+        <AdminDashboardCard title="Live status" className="lg:col-span-2">
+          <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-3">
+            <StatusMetric label="Total rooms" value={totalRooms || '—'} />
+            <StatusMetric label="Available" value={roomStats.available} accent="emerald" />
+            <StatusMetric label="Occupied" value={roomStats.occupied} accent="blue" />
+            <StatusMetric label="Maintenance" value={roomStats.maintenance} accent="amber" />
+            <StatusMetric label="Check-ins today" value={today.data?.checkIns.length ?? 0} />
+            <StatusMetric label="Check-outs today" value={today.data?.checkOuts.length ?? 0} />
           </div>
         </AdminDashboardCard>
 
-        <div className="overflow-hidden rounded-xl border border-neutral-100 bg-gradient-to-br from-primary via-primary to-primary-light p-5 text-white shadow-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-white/70">Occupancy snapshot</p>
-              <p className="mt-3 font-display text-4xl font-extrabold tracking-tight">
-                {occupancy.data ? `${occupancyRate.toFixed(1)}%` : '—'}
-              </p>
-              <p className="mt-1 text-xs text-white/60">Period average</p>
-            </div>
-            <div className="rounded-lg bg-white/10 p-2">
-              <TrendingUp className="h-5 w-5 text-amber-300" />
-            </div>
+        <div className="rounded-2xl border border-neutral-200/70 bg-white p-5 sm:p-6">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">Occupancy</p>
+          <p className="mt-2 text-4xl font-semibold tracking-tight text-neutral-900">
+            {occupancy.data ? `${occupancyRate.toFixed(1)}%` : '—'}
+          </p>
+          <div className="mt-5 h-1 overflow-hidden rounded-full bg-neutral-100">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${Math.min(occupancyRate, 100)}%` }}
+            />
           </div>
-
-          <div className="mt-5">
-            <div className="h-2 overflow-hidden rounded-full bg-white/20">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-400 transition-all duration-500"
-                style={{ width: `${Math.min(occupancyRate, 100)}%` }}
-              />
-            </div>
-            <div className="mt-3 flex items-center justify-between text-xs text-white/70">
-              <span>0%</span>
-              <span>{totalRooms} rooms in inventory</span>
-              <span>100%</span>
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-white/10 pt-4">
-            <div className="text-center">
-              <p className="font-display text-lg font-bold">{roomStats.occupied}</p>
-              <p className="text-[10px] uppercase tracking-wide text-white/60">Occupied</p>
-            </div>
-            <div className="border-x border-white/10 text-center">
-              <p className="font-display text-lg font-bold">{roomStats.available}</p>
-              <p className="text-[10px] uppercase tracking-wide text-white/60">Available</p>
-            </div>
-            <div className="text-center">
-              <p className="font-display text-lg font-bold">{roomStats.maintenance}</p>
-              <p className="text-[10px] uppercase tracking-wide text-white/60">Maint.</p>
-            </div>
+          <div className="mt-4 flex items-center justify-between text-xs text-neutral-400">
+            <span>{roomStats.occupied} occupied</span>
+            <span>{roomStats.available} available</span>
           </div>
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         <AdminDashboardCard
           title="Revenue by room type"
           description={
-            revenue.data
-              ? `Paid payments · $${revenue.data.totalRevenue.toFixed(2)} total`
-              : 'Revenue breakdown for selected range'
+            revenue.data ? `$${revenue.data.totalRevenue.toFixed(2)} total` : undefined
           }
         >
-          <div className="h-56 sm:h-64">
+          <div className="h-52 sm:h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenue.data?.byRoomType ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
-                <XAxis dataKey="roomTypeName" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Revenue']} />
-                <Bar dataKey="revenue" name="Revenue" fill={CHART_NAVY} radius={[4, 4, 0, 0]} />
+              <BarChart data={revenue.data?.byRoomType ?? []} barCategoryGap="20%">
+                <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
+                <XAxis
+                  dataKey="roomTypeName"
+                  tick={{ fontSize: 11, fill: '#a8a29e' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#a8a29e' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                />
+                <Tooltip
+                  formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Revenue']}
+                  contentStyle={{
+                    border: 'none',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 24px rgb(0 0 0 / 0.08)',
+                    fontSize: '12px',
+                  }}
+                />
+                <Bar dataKey="revenue" name="Revenue" fill={CHART_PRIMARY} radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </AdminDashboardCard>
 
-        <AdminDashboardCard
-          title="Occupancy trend"
-          description="Daily occupancy rate over the selected range"
-        >
-          <div className="h-56 sm:h-64">
+        <AdminDashboardCard title="Occupancy trend">
+          <div className="h-52 sm:h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={occupancy.data?.days ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis unit="%" tick={{ fontSize: 11 }} domain={[0, 100]} />
-                <Tooltip />
+                <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11, fill: '#a8a29e' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  unit="%"
+                  tick={{ fontSize: 11, fill: '#a8a29e' }}
+                  axisLine={false}
+                  tickLine={false}
+                  domain={[0, 100]}
+                  width={36}
+                />
+                <Tooltip
+                  contentStyle={{
+                    border: 'none',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 24px rgb(0 0 0 / 0.08)',
+                    fontSize: '12px',
+                  }}
+                />
                 <Line
                   type="monotone"
                   dataKey="occupancyRate"
-                  name="Occupancy %"
-                  stroke={CHART_GOLD}
-                  strokeWidth={2}
+                  name="Occupancy"
+                  stroke={CHART_PRIMARY}
+                  strokeWidth={1.5}
                   dot={false}
                 />
               </LineChart>
@@ -320,48 +248,54 @@ export function AdminOverviewPage() {
       </div>
 
       <AdminDashboardCard
-        title="Today's activity"
+        title="Today"
         description={
           today.data
-            ? `${today.data.checkIns.length} check-ins · ${today.data.checkOuts.length} check-outs`
-            : 'Arrivals and departures for today'
+            ? `${today.data.checkIns.length} arrivals · ${today.data.checkOuts.length} departures`
+            : undefined
         }
       >
         {today.isLoading ? (
           <BookingListSkeleton count={3} />
         ) : (
-          <AdminBookingTable bookings={recentBookings} emptyMessage="No arrivals or departures today." />
+          <AdminBookingTable bookings={recentBookings} emptyMessage="No activity today." />
         )}
       </AdminDashboardCard>
     </div>
   )
 }
 
-function RoomStatusCell({
-  icon,
+function QuickLink({ to, label }: { to: string; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="rounded-full px-3 py-2 text-xs font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+    >
+      {label}
+    </Link>
+  )
+}
+
+function StatusMetric({
   label,
   value,
-  tone,
+  accent,
 }: {
-  icon: ReactNode
   label: string
   value: number | string
-  tone: 'neutral' | 'emerald' | 'blue' | 'amber'
+  accent?: 'emerald' | 'blue' | 'amber'
 }) {
-  const valueColor = {
-    neutral: 'text-primary',
-    emerald: 'text-emerald-900',
-    blue: 'text-blue-900',
-    amber: 'text-amber-900',
-  }[tone]
+  const dotColor = accent
+    ? { emerald: 'bg-emerald-400', blue: 'bg-blue-400', amber: 'bg-amber-400' }[accent]
+    : undefined
 
   return (
-    <div className="flex flex-col bg-white px-4 py-4">
-      <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
-        {icon}
-        {label}
+    <div>
+      <div className="flex items-center gap-1.5">
+        {accent && <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />}
+        <p className="text-xs text-neutral-400">{label}</p>
       </div>
-      <p className={`mt-2 font-display text-2xl font-extrabold ${valueColor}`}>{value}</p>
+      <p className="mt-1 text-xl font-semibold text-neutral-900">{value}</p>
     </div>
   )
 }

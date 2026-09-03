@@ -15,23 +15,19 @@ export function AdminDashboardStatCard({
 }: AdminDashboardStatCardProps) {
   return (
     <div
-      className={`rounded-xl p-5 shadow-card ${
-        featured
-          ? 'bg-primary text-white shadow-lg shadow-primary/20'
-          : 'border border-neutral-100 bg-white'
+      className={`rounded-2xl border bg-white p-5 ${
+        featured ? 'border-primary/20 ring-1 ring-primary/5' : 'border-neutral-200/70'
       }`}
     >
-      <p className={`text-sm font-medium ${featured ? 'text-white/75' : 'text-neutral-500'}`}>
-        {label}
-      </p>
+      <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">{label}</p>
       <p
-        className={`mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl ${featured ? 'text-white' : 'text-primary'}`}
+        className={`mt-2 text-2xl font-semibold tracking-tight sm:text-[1.75rem] ${
+          featured ? 'text-primary' : 'text-neutral-900'
+        }`}
       >
         {value}
       </p>
-      {hint && (
-        <p className={`mt-1 text-xs ${featured ? 'text-white/60' : 'text-neutral-400'}`}>{hint}</p>
-      )}
+      {hint && <p className="mt-1.5 text-xs text-neutral-400">{hint}</p>}
     </div>
   )
 }
@@ -50,10 +46,12 @@ export function AdminDashboardCard({
   className = '',
 }: AdminDashboardCardProps) {
   return (
-    <section className={`rounded-xl border border-neutral-100 bg-white p-5 shadow-card ${className}`}>
-      <h2 className="font-display text-lg font-bold text-primary">{title}</h2>
-      {description && <p className="mt-1 text-sm text-neutral-500">{description}</p>}
-      <div className={description || title ? 'mt-4' : ''}>{children}</div>
+    <section className={`rounded-2xl border border-neutral-200/70 bg-white p-5 sm:p-6 ${className}`}>
+      <div className="mb-5">
+        <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
+        {description && <p className="mt-1 text-xs text-neutral-400">{description}</p>}
+      </div>
+      {children}
     </section>
   )
 }

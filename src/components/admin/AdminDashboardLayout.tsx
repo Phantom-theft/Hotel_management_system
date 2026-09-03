@@ -11,7 +11,7 @@ function AdminDashboardShell() {
   useCloseAdminSidebarOnNavigate()
 
   return (
-    <div className="min-h-dvh bg-neutral-50">
+    <div className="min-h-dvh bg-[#fafaf9]">
       <ToastViewport />
       <AdminDashboardSidebar />
       <div className="lg:pl-64">
