@@ -17,6 +17,7 @@ import { Modal } from '../../components/ui/Modal'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { toast } from '../../store/toastStore'
 import { getApiErrorMessage } from '../../utils/apiError'
+import { matchesBookingSearch } from '../../utils/bookingTableSort'
 import type { Booking } from '../../types/api'
 
 type BookingFilter = 'all' | 'check-ins' | 'check-outs'
@@ -109,19 +110,7 @@ export function AdminBookingsPage() {
     }
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      list = list.filter((b) => {
-        const guestName = b.guest?.name?.toLowerCase() ?? ''
-        const guestEmail = b.guest?.email?.toLowerCase() ?? ''
-        const roomNum = b.room?.roomNumber?.toLowerCase() ?? ''
-        const bookingId = b.id.toLowerCase()
-        return (
-          guestName.includes(q) ||
-          guestEmail.includes(q) ||
-          roomNum.includes(q) ||
-          bookingId.includes(q)
-        )
-      })
+      list = list.filter((b) => matchesBookingSearch(b, searchQuery))
     }
 
     return list

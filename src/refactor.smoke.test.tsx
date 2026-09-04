@@ -24,13 +24,79 @@ vi.mock('./api/hotel', async (importOriginal) => {
     ...actual,
     searchRooms: vi.fn().mockResolvedValue({ rooms: [] }),
     getTodaysBookings: vi.fn().mockResolvedValue({ checkIns: [], checkOuts: [] }),
-    listAllRooms: vi.fn().mockResolvedValue({ rooms: [] }),
+    listAllRooms: vi.fn().mockResolvedValue({
+      rooms: [
+        {
+          id: '1',
+          roomNumber: '101',
+          floor: 1,
+          status: 'available',
+          roomTypeId: 'rt1',
+          roomType: { id: 'rt1', name: 'Standard' },
+        },
+        {
+          id: '2',
+          roomNumber: '102',
+          floor: 1,
+          status: 'available',
+          roomTypeId: 'rt1',
+          roomType: { id: 'rt1', name: 'Standard' },
+        },
+        {
+          id: '3',
+          roomNumber: '201',
+          floor: 2,
+          status: 'occupied',
+          roomTypeId: 'rt1',
+          roomType: { id: 'rt1', name: 'Standard' },
+        },
+        {
+          id: '4',
+          roomNumber: '202',
+          floor: 2,
+          status: 'maintenance',
+          roomTypeId: 'rt1',
+          roomType: { id: 'rt1', name: 'Standard' },
+        },
+      ],
+    }),
     getOccupancyReport: vi.fn().mockResolvedValue({
       overallOccupancyRate: 0,
       totalRooms: 5,
       daily: [],
     }),
-    getRevenueReport: vi.fn().mockResolvedValue({ totalRevenue: 0, roomNightsSold: 0, daily: [] }),
+    getRevenueReport: vi.fn().mockResolvedValue({
+      totalRevenue: 0,
+      roomNightsSold: 0,
+      newBookings: 0,
+      checkIns: 0,
+      checkOuts: 0,
+      previousPeriod: {
+        from: '2026-01-01',
+        to: '2026-01-30',
+        totalRevenue: 0,
+        newBookings: 0,
+        checkIns: 0,
+        checkOuts: 0,
+      },
+      changes: {
+        totalRevenuePercent: null,
+        newBookingsPercent: null,
+        checkInsPercent: null,
+        checkOutsPercent: null,
+      },
+      byPeriod: [],
+      byRoomType: [],
+      bookingsByRoomType: [],
+    }),
+    listRoomTypes: vi.fn().mockResolvedValue({ roomTypes: [] }),
+    getRoomTypeReviews: vi.fn().mockResolvedValue({
+      page: 1,
+      limit: 1,
+      total: 0,
+      averageRating: 0,
+      reviews: [],
+    }),
     getCancellationsReport: vi.fn().mockResolvedValue({
       totalBookings: 0,
       cancelledBookings: 0,
@@ -119,6 +185,15 @@ describe('refactor smoke — pages mount', () => {
       ),
     )
     expect(await screen.findByText('Total Revenue')).toBeInTheDocument()
+    expect(screen.getByText('New Bookings')).toBeInTheDocument()
+    expect(screen.getByText('Check-ins')).toBeInTheDocument()
+    expect(screen.getByText('Check-outs')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Room Occupancy' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: /Room status: 2 available, 1 occupied, 1 maintenance/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bookings by Room Type' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Overall Ratings' })).toBeInTheDocument()
   })
 })
 

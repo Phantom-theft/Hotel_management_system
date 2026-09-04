@@ -3,6 +3,12 @@ import { prisma } from '../config/database';
 import { AppError } from '../utils/helpers';
 import { calculateNights, decimalToNumber, parseDateParam } from '../utils/booking';
 
+const ACTIVE_STAY_STATUSES: BookingStatus[] = [
+  BookingStatus.confirmed,
+  BookingStatus.checked_in,
+  BookingStatus.checked_out,
+];
+
 function parseRange(from?: string, to?: string) {
   if (!from || !to) {
     throw new AppError(400, 'from and to query params are required (ISO dates)');
@@ -26,6 +32,67 @@ function eachUtcDay(start: Date, end: Date): Date[] {
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return days;
+}
+
+/** Immediately preceding window of the same length as [start, end] (inclusive day count). */
+export function previousEqualLengthRange(start: Date, end: Date) {
+  const dayCount = eachUtcDay(start, end).length;
+  const prevEnd = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  prevEnd.setUTCDate(prevEnd.getUTCDate() - 1);
+  prevEnd.setUTCHours(23, 59, 59, 999);
+
+  const prevStart = new Date(Date.UTC(prevEnd.getUTCFullYear(), prevEnd.getUTCMonth(), prevEnd.getUTCDate()));
+  prevStart.setUTCDate(prevStart.getUTCDate() - (dayCount - 1));
+  prevStart.setUTCHours(0, 0, 0, 0);
+
+  return { start: prevStart, end: prevEnd };
+}
+
+/** Percent change current vs previous. Null when previous is 0 (undefined baseline). */
+export function percentChange(current: number, previous: number): number | null {
+  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) {
+    return null;
+  }
+  return Number((((current - previous) / Math.abs(previous)) * 100).toFixed(1));
+}
+
+function isoDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+async function sumPaidRevenue(start: Date, end: Date) {
+  const agg = await prisma.payment.aggregate({
+    where: {
+      status: PaymentStatus.paid,
+      createdAt: { gte: start, lte: end },
+    },
+    _sum: { amount: true },
+  });
+  return decimalToNumber(agg._sum.amount ?? new Prisma.Decimal(0));
+}
+
+async function countNewBookings(start: Date, end: Date) {
+  return prisma.booking.count({
+    where: { createdAt: { gte: start, lte: end } },
+  });
+}
+
+async function countCheckIns(start: Date, end: Date) {
+  return prisma.booking.count({
+    where: {
+      status: { in: ACTIVE_STAY_STATUSES },
+      checkIn: { gte: start, lte: end },
+    },
+  });
+}
+
+async function countCheckOuts(start: Date, end: Date) {
+  return prisma.booking.count({
+    where: {
+      status: { in: ACTIVE_STAY_STATUSES },
+      checkOut: { gte: start, lte: end },
+    },
+  });
 }
 
 /**
@@ -83,9 +150,10 @@ export async function getOccupancyReport(from?: string, to?: string) {
   };
 }
 
-/** Revenue from paid Payment records only (not booking.totalPrice). */
+/** Revenue from paid Payment records only (not booking.totalPrice), plus activity KPIs vs prior period. */
 export async function getRevenueReport(from?: string, to?: string) {
   const { start, end } = parseRange(from, to);
+  const previous = previousEqualLengthRange(start, end);
 
   const payments = await prisma.payment.findMany({
     where: {
@@ -126,11 +194,74 @@ export async function getRevenueReport(from?: string, to?: string) {
     byRoomType.set(rt.id, existing);
   }
 
+  const [
+    newBookings,
+    checkIns,
+    checkOuts,
+    previousTotalRevenue,
+    previousNewBookings,
+    previousCheckIns,
+    previousCheckOuts,
+    bookingsInPeriod,
+  ] = await Promise.all([
+    countNewBookings(start, end),
+    countCheckIns(start, end),
+    countCheckOuts(start, end),
+    sumPaidRevenue(previous.start, previous.end),
+    countNewBookings(previous.start, previous.end),
+    countCheckIns(previous.start, previous.end),
+    countCheckOuts(previous.start, previous.end),
+    prisma.booking.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      select: {
+        room: {
+          select: {
+            roomType: { select: { id: true, name: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const bookingsByRoomTypeMap = new Map<
+    string,
+    { roomTypeId: string; roomTypeName: string; bookings: number }
+  >();
+  for (const booking of bookingsInPeriod) {
+    const rt = booking.room.roomType;
+    const existing = bookingsByRoomTypeMap.get(rt.id) ?? {
+      roomTypeId: rt.id,
+      roomTypeName: rt.name,
+      bookings: 0,
+    };
+    existing.bookings += 1;
+    bookingsByRoomTypeMap.set(rt.id, existing);
+  }
+
+  const currentRevenue = decimalToNumber(totalRevenue);
+
   return {
-    from: start.toISOString().slice(0, 10),
-    to: end.toISOString().slice(0, 10),
-    totalRevenue: decimalToNumber(totalRevenue),
+    from: isoDate(start),
+    to: isoDate(end),
+    totalRevenue: currentRevenue,
     roomNightsSold,
+    newBookings,
+    checkIns,
+    checkOuts,
+    previousPeriod: {
+      from: isoDate(previous.start),
+      to: isoDate(previous.end),
+      totalRevenue: previousTotalRevenue,
+      newBookings: previousNewBookings,
+      checkIns: previousCheckIns,
+      checkOuts: previousCheckOuts,
+    },
+    changes: {
+      totalRevenuePercent: percentChange(currentRevenue, previousTotalRevenue),
+      newBookingsPercent: percentChange(newBookings, previousNewBookings),
+      checkInsPercent: percentChange(checkIns, previousCheckIns),
+      checkOutsPercent: percentChange(checkOuts, previousCheckOuts),
+    },
     byPeriod: [...byDay.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, revenue]) => ({ date, revenue: decimalToNumber(revenue) })),
@@ -139,6 +270,11 @@ export async function getRevenueReport(from?: string, to?: string) {
       roomTypeName: r.roomTypeName,
       revenue: decimalToNumber(r.revenue),
     })),
+    bookingsByRoomType: [...bookingsByRoomTypeMap.values()].sort((a, b) =>
+      b.bookings !== a.bookings
+        ? b.bookings - a.bookings
+        : a.roomTypeName.localeCompare(b.roomTypeName),
+    ),
   };
 }
 

@@ -4,6 +4,7 @@ import { adminDashboardTitleForPath } from '../../constants/admin/dashboardNav'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 import { useAuthStore } from '../../store/authStore'
 import { AdminDateRangePicker } from './AdminDateRangePicker'
+import { AdminNotificationBell, AdminTopBarSearch } from './AdminTopBarSearch'
 
 function greetingForHour(hour: number) {
   if (hour < 12) return 'Good morning'
@@ -47,6 +48,9 @@ export function AdminDashboardTopBar() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pl-11 xl:pl-0">
+              <AdminTopBarSearch className="order-last w-full sm:order-none sm:w-auto sm:min-w-[14rem] lg:min-w-[16rem]" />
+              <AdminNotificationBell />
+
               <div className="inline-flex flex-wrap items-center gap-1.5">
                 <Link
                   to="/admin/bookings"
@@ -69,7 +73,7 @@ export function AdminDashboardTopBar() {
 
   return (
     <header className="admin-print-hide sticky top-0 z-30 border-b border-neutral-200/60 bg-[#F5F6FA]/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           className="rounded-lg p-2 text-neutral-600 transition hover:bg-white lg:hidden"
@@ -79,8 +83,10 @@ export function AdminDashboardTopBar() {
           <Menu className="h-5 w-5" />
         </button>
         {title && (
-          <h1 className="text-lg font-semibold tracking-tight text-neutral-900">{title}</h1>
+          <h1 className="mr-auto text-lg font-semibold tracking-tight text-neutral-900">{title}</h1>
         )}
+        <AdminTopBarSearch className="w-full sm:ml-auto sm:w-auto sm:min-w-[14rem] lg:min-w-[16rem]" />
+        <AdminNotificationBell />
       </div>
     </header>
   )

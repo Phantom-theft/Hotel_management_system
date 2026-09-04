@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Line, LineChart, ResponsiveContainer } from 'recharts'
 import { cn } from '../../lib/utils'
@@ -22,12 +23,13 @@ export function AdminDashboardStatCard({
   iconClassName = 'bg-blue-50 text-blue-600',
   hint,
   change,
-  changeSuffix = 'vs last 30 days',
+  changeSuffix = 'from previous period',
   sparklineData,
   sparklineColor = '#3B82F6',
 }: AdminDashboardStatCardProps) {
   const hasChange = change != null && Number.isFinite(change)
   const isUp = (change ?? 0) >= 0
+  const TrendIcon = isUp ? ArrowUpRight : ArrowDownRight
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-[0_1px_3px_rgba(15,27,61,0.06),0_4px_16px_rgba(15,27,61,0.04)]">
@@ -54,11 +56,11 @@ export function AdminDashboardStatCard({
           {hasChange ? (
             <p
               className={cn(
-                'mt-1.5 flex items-center gap-1 text-xs font-medium',
+                'mt-1.5 inline-flex items-center gap-0.5 text-xs font-medium',
                 isUp ? 'text-emerald-600' : 'text-red-500',
               )}
             >
-              <span aria-hidden>{isUp ? '↑' : '↓'}</span>
+              <TrendIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
               <span>
                 {Math.abs(change!).toFixed(1)}% {changeSuffix}
               </span>

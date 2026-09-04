@@ -3,6 +3,7 @@ import { useQueries, useQuery } from '@tanstack/react-query'
 import { Star, User } from 'lucide-react'
 import { getRoomTypeReviews, listRoomTypes } from '../../api/hotel'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
+import { aggregateOverallReviews } from '../../utils/reviewAggregates'
 
 export function AdminReviewsPage() {
   const typesQuery = useQuery({ queryKey: ['room-types'], queryFn: listRoomTypes })
@@ -28,17 +29,17 @@ export function AdminReviewsPage() {
   const { reviews, avgRating, totalReviews, isLoading } = useMemo(() => {
     if (selectedRoomTypeId === 'all') {
       const allReviews = allReviewQueries.flatMap((q) => q.data?.reviews ?? [])
-      const total = allReviewQueries.reduce((sum, q) => sum + (q.data?.total ?? 0), 0)
-      const weightedSum = allReviewQueries.reduce((sum, q) => {
-        const data = q.data
-        if (!data || data.total === 0) return sum
-        return sum + data.averageRating * data.total
-      }, 0)
+      const { avgRating: avg, totalReviews: total } = aggregateOverallReviews(
+        allReviewQueries.map((q) => ({
+          total: q.data?.total ?? 0,
+          averageRating: q.data?.averageRating ?? 0,
+        })),
+      )
       return {
         reviews: allReviews.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         ),
-        avgRating: total > 0 ? weightedSum / total : 0,
+        avgRating: avg,
         totalReviews: total,
         isLoading: allReviewQueries.some((q) => q.isLoading),
       }

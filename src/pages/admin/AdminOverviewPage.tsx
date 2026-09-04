@@ -1,13 +1,10 @@
 import { useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
-  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,13 +12,13 @@ import {
 } from 'recharts'
 import {
   ArrowRight,
+  BookPlus,
   CalendarCheck,
   CalendarMinus,
-  ChartColumn,
-  ChartPie,
   ChevronDown,
-  Database,
   DoorOpen,
+  LogIn,
+  LogOut,
   Users,
   Wallet,
   Wrench,
@@ -30,32 +27,27 @@ import {
   getCancellationsReport,
   getOccupancyReport,
   getRevenueReport,
+  getRoomTypeReviews,
   getTodaysBookings,
   listAllRooms,
+  listRoomTypes,
 } from '../../api/hotel'
 import { AdminBookingTable } from '../../components/admin/AdminBookingTable'
+import {
+  AdminChartTooltip,
+  BookingsByRoomTypeDonut,
+  OverallRatingsWidget,
+  RoomOccupancyWidget,
+} from '../../components/admin/AdminDashboardCharts'
 import { AdminDashboardCard, AdminDashboardStatCard } from '../../components/admin/AdminDashboardCards'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
-import { computeAdr, computeRevpar, formatHospitalityCurrency } from '../../utils/hospitalityMetrics'
+import { previousPeriodChangeSuffix } from '../../utils/periodTrends'
+import { aggregateOverallReviews } from '../../utils/reviewAggregates'
 
 const CHART_PRIMARY = '#0F1B3D'
+const CHART_ACCENT = '#3B82F6'
 const CHART_MUTED = '#E5E7EB'
-
-function pctChange(current: number, previous: number): number | null {
-  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return null
-  return ((current - previous) / Math.abs(previous)) * 100
-}
-
-/** Compare second half of a series to the first half (period trend proxy). */
-function seriesChange(values: number[]): number | null {
-  if (values.length < 4) return null
-  const mid = Math.floor(values.length / 2)
-  const first = values.slice(0, mid)
-  const second = values.slice(mid)
-  const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length
-  return pctChange(avg(second), avg(first))
-}
 
 function ChartFilterButton({ label = 'This month' }: { label?: string }) {
   return (
@@ -69,11 +61,8 @@ function ChartFilterButton({ label = 'This month' }: { label?: string }) {
   )
 }
 
-function formatBarLabel(value: unknown) {
-  const n = Number(value)
-  if (!Number.isFinite(n)) return ''
-  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`
-  return `$${n.toFixed(0)}`
+function formatCurrency(value: number) {
+  return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 export function AdminOverviewPage() {
@@ -94,28 +83,30 @@ export function AdminOverviewPage() {
   })
   const today = useQuery({ queryKey: ['bookings-today'], queryFn: getTodaysBookings })
   const roomsQuery = useQuery({ queryKey: ['rooms-admin-all'], queryFn: listAllRooms })
+  const roomTypesQuery = useQuery({ queryKey: ['room-types'], queryFn: listRoomTypes })
+  const roomTypes = roomTypesQuery.data?.roomTypes ?? []
+
+  const reviewQueries = useQueries({
+    queries: roomTypes.map((t) => ({
+      queryKey: ['roomtype-reviews', t.id],
+      queryFn: () => getRoomTypeReviews(t.id, 1, 1),
+      enabled: roomTypes.length > 0,
+    })),
+  })
+
+  const overallReviews = useMemo(
+    () =>
+      aggregateOverallReviews(
+        reviewQueries.map((q) => ({
+          total: q.data?.total ?? 0,
+          averageRating: q.data?.averageRating ?? 0,
+        })),
+      ),
+    [reviewQueries],
+  )
 
   const loading = occupancy.isLoading || revenue.isLoading || cancellations.isLoading
-
-  const { adrFormatted, revparFormatted, adrValue, revparValue } = useMemo(() => {
-    const totalRev = revenue.data?.totalRevenue ?? 0
-    const roomNightsSold = revenue.data?.roomNightsSold ?? 0
-    const totalRooms = occupancy.data?.totalRooms ?? roomsQuery.data?.rooms?.length ?? 0
-    const adr = computeAdr(totalRev, roomNightsSold)
-    const revpar = computeRevpar(totalRev, totalRooms)
-
-    return {
-      adrFormatted: formatHospitalityCurrency(adr),
-      revparFormatted: formatHospitalityCurrency(revpar),
-      adrValue: adr,
-      revparValue: revpar,
-    }
-  }, [
-    revenue.data?.totalRevenue,
-    revenue.data?.roomNightsSold,
-    occupancy.data?.totalRooms,
-    roomsQuery.data?.rooms?.length,
-  ])
+  const changeSuffix = previousPeriodChangeSuffix(from, to)
 
   const roomStats = useMemo(() => {
     const rooms = roomsQuery.data?.rooms ?? []
@@ -138,44 +129,6 @@ export function AdminOverviewPage() {
     return merged.slice(0, 8)
   }, [today.data])
 
-  const revenueSpark = useMemo(
-    () => (revenue.data?.byPeriod ?? []).map((d) => ({ value: d.revenue })),
-    [revenue.data?.byPeriod],
-  )
-  const occupancySpark = useMemo(
-    () => (occupancy.data?.days ?? []).map((d) => ({ value: d.occupancyRate })),
-    [occupancy.data?.days],
-  )
-
-  const revenueChange = useMemo(
-    () => seriesChange((revenue.data?.byPeriod ?? []).map((d) => d.revenue)),
-    [revenue.data?.byPeriod],
-  )
-  const occupancyChange = useMemo(
-    () => seriesChange((occupancy.data?.days ?? []).map((d) => d.occupancyRate)),
-    [occupancy.data?.days],
-  )
-
-  // ADR / RevPAR sparklines derived from daily revenue ÷ inventory proxies
-  const adrSpark = useMemo(() => {
-    const nights = revenue.data?.roomNightsSold ?? 0
-    const days = revenue.data?.byPeriod ?? []
-    if (!days.length || nights <= 0) return []
-    const nightsPerDay = nights / days.length
-    return days.map((d) => ({ value: nightsPerDay > 0 ? d.revenue / nightsPerDay : 0 }))
-  }, [revenue.data?.byPeriod, revenue.data?.roomNightsSold])
-
-  const revparSpark = useMemo(() => {
-    const totalRooms = occupancy.data?.totalRooms ?? roomStats.total
-    const divisor = totalRooms || 1
-    return (revenue.data?.byPeriod ?? []).map((d) => ({
-      value: d.revenue / divisor,
-    }))
-  }, [revenue.data?.byPeriod, occupancy.data?.totalRooms, roomStats.total])
-
-  const adrChange = useMemo(() => seriesChange(adrSpark.map((d) => d.value)), [adrSpark])
-  const revparChange = useMemo(() => seriesChange(revparSpark.map((d) => d.value)), [revparSpark])
-
   const occupancyRate = occupancy.data?.overallOccupancyRate ?? 0
   const totalRooms = roomStats.total || occupancy.data?.totalRooms || 0
   const barData = revenue.data?.byRoomType ?? []
@@ -195,36 +148,38 @@ export function AdminOverviewPage() {
             }
             icon={Wallet}
             iconClassName="bg-blue-50 text-blue-600"
-            change={revenueChange}
-            sparklineData={revenueSpark}
+            change={revenue.data?.changes.totalRevenuePercent ?? null}
+            changeSuffix={changeSuffix}
+            sparklineData={(revenue.data?.byPeriod ?? []).map((d) => ({ value: d.revenue }))}
             sparklineColor="#3B82F6"
+            hint="No prior-period baseline"
           />
           <AdminDashboardStatCard
-            label="Occupancy"
-            value={occupancy.data ? `${occupancy.data.overallOccupancyRate.toFixed(1)}%` : '—'}
-            icon={ChartPie}
+            label="New Bookings"
+            value={revenue.data ? String(revenue.data.newBookings) : '—'}
+            icon={BookPlus}
             iconClassName="bg-emerald-50 text-emerald-600"
-            change={occupancyChange}
-            sparklineData={occupancySpark}
-            sparklineColor="#10B981"
+            change={revenue.data?.changes.newBookingsPercent ?? null}
+            changeSuffix={changeSuffix}
+            hint="No prior-period baseline"
           />
           <AdminDashboardStatCard
-            label="ADR"
-            value={adrFormatted}
-            icon={ChartColumn}
+            label="Check-ins"
+            value={revenue.data ? String(revenue.data.checkIns) : '—'}
+            icon={LogIn}
             iconClassName="bg-orange-50 text-orange-600"
-            change={adrValue != null ? adrChange : null}
-            sparklineData={adrSpark}
-            sparklineColor="#F97316"
+            change={revenue.data?.changes.checkInsPercent ?? null}
+            changeSuffix={changeSuffix}
+            hint="No prior-period baseline"
           />
           <AdminDashboardStatCard
-            label="RevPAR"
-            value={revparFormatted}
-            icon={Database}
+            label="Check-outs"
+            value={revenue.data ? String(revenue.data.checkOuts) : '—'}
+            icon={LogOut}
             iconClassName="bg-purple-50 text-purple-600"
-            change={revparValue != null ? revparChange : null}
-            sparklineData={revparSpark}
-            sparklineColor="#A855F7"
+            change={revenue.data?.changes.checkOutsPercent ?? null}
+            changeSuffix={changeSuffix}
+            hint="No prior-period baseline"
           />
         </div>
       )}
@@ -327,14 +282,21 @@ export function AdminOverviewPage() {
           title="Revenue by room type"
           description={
             revenue.data
-              ? `$${revenue.data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} total revenue`
+              ? `${formatCurrency(revenue.data.totalRevenue)} total revenue`
               : undefined
           }
           headerRight={<ChartFilterButton />}
         >
           <div className="h-56 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} barCategoryGap="28%" margin={{ top: 24, right: 8, left: 0, bottom: 0 }}>
+              <AreaChart data={barData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={CHART_ACCENT} stopOpacity={0.35} />
+                    <stop offset="55%" stopColor={CHART_ACCENT} stopOpacity={0.12} />
+                    <stop offset="100%" stopColor={CHART_ACCENT} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
                 <XAxis
                   dataKey="roomTypeName"
@@ -342,25 +304,34 @@ export function AdminOverviewPage() {
                   axisLine={false}
                   tickLine={false}
                 />
-                <YAxis hide />
-                <Tooltip
-                  formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Revenue']}
-                  contentStyle={{
-                    border: 'none',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 24px rgb(15 27 61 / 0.1)',
-                    fontSize: '12px',
-                  }}
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={44}
+                  tickFormatter={(v) => (v >= 1000 ? `$${v / 1000}k` : `$${v}`)}
                 />
-                <Bar dataKey="revenue" name="Revenue" fill={CHART_PRIMARY} radius={[6, 6, 0, 0]} maxBarSize={48}>
-                  <LabelList
-                    dataKey="revenue"
-                    position="top"
-                    formatter={formatBarLabel}
-                    style={{ fill: '#6B7280', fontSize: 11, fontWeight: 600 }}
-                  />
-                </Bar>
-              </BarChart>
+                <Tooltip
+                  cursor={{ stroke: CHART_ACCENT, strokeWidth: 1, strokeDasharray: '4 4' }}
+                  content={
+                    <AdminChartTooltip
+                      valueFormatter={(v) => formatCurrency(v)}
+                      labelFormatter={(l) => String(l ?? '')}
+                    />
+                  }
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  name="Revenue"
+                  stroke={CHART_ACCENT}
+                  strokeWidth={2.5}
+                  fill="url(#revenueAreaFill)"
+                  fillOpacity={1}
+                  dot={{ r: 3, fill: CHART_ACCENT, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: CHART_ACCENT, stroke: '#fff', strokeWidth: 2 }}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </AdminDashboardCard>
@@ -368,11 +339,12 @@ export function AdminOverviewPage() {
         <AdminDashboardCard title="Occupancy trend" headerRight={<ChartFilterButton />}>
           <div className="h-56 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={occupancy.data?.days ?? []} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <AreaChart data={occupancy.data?.days ?? []} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="occupancyFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.22} />
-                    <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0.02} />
+                  <linearGradient id="occupancyAreaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.32} />
+                    <stop offset="55%" stopColor={CHART_PRIMARY} stopOpacity={0.1} />
+                    <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
@@ -392,30 +364,79 @@ export function AdminOverviewPage() {
                   width={40}
                 />
                 <Tooltip
-                  formatter={(v) => [`${Number(v).toFixed(1)}%`, 'Occupancy']}
-                  contentStyle={{
-                    border: 'none',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 24px rgb(15 27 61 / 0.1)',
-                    fontSize: '12px',
-                  }}
+                  cursor={{ stroke: CHART_PRIMARY, strokeWidth: 1, strokeDasharray: '4 4' }}
+                  content={
+                    <AdminChartTooltip
+                      valueFormatter={(v) => `${v.toFixed(1)}%`}
+                      labelFormatter={(l) => String(l ?? '')}
+                    />
+                  }
                 />
                 <Area
                   type="monotone"
                   dataKey="occupancyRate"
                   name="Occupancy"
                   stroke={CHART_PRIMARY}
-                  strokeWidth={2}
-                  fill="url(#occupancyFill)"
+                  strokeWidth={2.5}
+                  fill="url(#occupancyAreaFill)"
                   fillOpacity={1}
                   dot={false}
-                  activeDot={{ r: 4, fill: CHART_PRIMARY }}
+                  activeDot={{ r: 5, fill: CHART_PRIMARY, stroke: '#fff', strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </AdminDashboardCard>
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <AdminDashboardCard
+          title="Bookings by Room Type"
+          description="Share of bookings created in the selected period"
+        >
+          <BookingsByRoomTypeDonut items={revenue.data?.bookingsByRoomType ?? []} />
+        </AdminDashboardCard>
+
+        <AdminDashboardCard
+          title="Overall Ratings"
+          description="Across all room types"
+          headerRight={
+            <Link
+              to="/admin/reviews"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
+            >
+              View reviews
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </Link>
+          }
+        >
+          <OverallRatingsWidget
+            avgRating={overallReviews.avgRating}
+            totalReviews={overallReviews.totalReviews}
+          />
+        </AdminDashboardCard>
+      </div>
+
+      <AdminDashboardCard
+        title="Room Occupancy"
+        description="Live breakdown by room status"
+        headerRight={
+          <Link
+            to="/admin/rooms"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
+          >
+            Manage rooms
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        }
+      >
+        <RoomOccupancyWidget
+          total={roomStats.total}
+          available={roomStats.available}
+          occupied={roomStats.occupied}
+          maintenance={roomStats.maintenance}
+        />
+      </AdminDashboardCard>
 
       <AdminDashboardCard
         title="Today's arrivals & departures"

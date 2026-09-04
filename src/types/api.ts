@@ -104,8 +104,26 @@ export interface RevenueReport {
   to: string
   totalRevenue: number
   roomNightsSold: number
+  newBookings: number
+  checkIns: number
+  checkOuts: number
+  previousPeriod: {
+    from: string
+    to: string
+    totalRevenue: number
+    newBookings: number
+    checkIns: number
+    checkOuts: number
+  }
+  changes: {
+    totalRevenuePercent: number | null
+    newBookingsPercent: number | null
+    checkInsPercent: number | null
+    checkOutsPercent: number | null
+  }
   byPeriod: Array<{ date: string; revenue: number }>
   byRoomType: Array<{ roomTypeId: string; roomTypeName: string; revenue: number }>
+  bookingsByRoomType: Array<{ roomTypeId: string; roomTypeName: string; bookings: number }>
 }
 
 export interface CancellationsReport {
