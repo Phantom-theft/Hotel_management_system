@@ -1,33 +1,90 @@
+import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Line, LineChart, ResponsiveContainer } from 'recharts'
+import { cn } from '../../lib/utils'
 
 interface AdminDashboardStatCardProps {
   label: string
   value: string
+  icon?: LucideIcon
+  iconClassName?: string
   hint?: string
-  featured?: boolean
+  change?: number | null
+  changeSuffix?: string
+  sparklineData?: Array<{ value: number }>
+  sparklineColor?: string
 }
 
 export function AdminDashboardStatCard({
   label,
   value,
+  icon: Icon,
+  iconClassName = 'bg-blue-50 text-blue-600',
   hint,
-  featured = false,
+  change,
+  changeSuffix = 'vs last 30 days',
+  sparklineData,
+  sparklineColor = '#3B82F6',
 }: AdminDashboardStatCardProps) {
+  const hasChange = change != null && Number.isFinite(change)
+  const isUp = (change ?? 0) >= 0
+
   return (
-    <div
-      className={`rounded-2xl border bg-white p-5 ${
-        featured ? 'border-primary/20 ring-1 ring-primary/5' : 'border-neutral-200/70'
-      }`}
-    >
-      <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">{label}</p>
-      <p
-        className={`mt-2 text-2xl font-semibold tracking-tight sm:text-[1.75rem] ${
-          featured ? 'text-primary' : 'text-neutral-900'
-        }`}
-      >
-        {value}
-      </p>
-      {hint && <p className="mt-1.5 text-xs text-neutral-400">{hint}</p>}
+    <div className="rounded-xl bg-white p-5 shadow-[0_1px_3px_rgba(15,27,61,0.06),0_4px_16px_rgba(15,27,61,0.04)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2.5">
+            {Icon && (
+              <div
+                className={cn(
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                  iconClassName,
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+              </div>
+            )}
+            <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">
+              {label}
+            </p>
+          </div>
+          <p className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 sm:text-[1.7rem]">
+            {value}
+          </p>
+          {hasChange ? (
+            <p
+              className={cn(
+                'mt-1.5 flex items-center gap-1 text-xs font-medium',
+                isUp ? 'text-emerald-600' : 'text-red-500',
+              )}
+            >
+              <span aria-hidden>{isUp ? '↑' : '↓'}</span>
+              <span>
+                {Math.abs(change!).toFixed(1)}% {changeSuffix}
+              </span>
+            </p>
+          ) : (
+            hint && <p className="mt-1.5 text-xs text-neutral-400">{hint}</p>
+          )}
+        </div>
+
+        {sparklineData && sparklineData.length > 1 && (
+          <div className="h-12 w-20 shrink-0 self-end sm:h-14 sm:w-24">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparklineData}>
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={sparklineColor}
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -37,6 +94,8 @@ interface AdminDashboardCardProps {
   description?: string
   children: ReactNode
   className?: string
+  headerRight?: ReactNode
+  titleAddon?: ReactNode
 }
 
 export function AdminDashboardCard({
@@ -44,12 +103,25 @@ export function AdminDashboardCard({
   description,
   children,
   className = '',
+  headerRight,
+  titleAddon,
 }: AdminDashboardCardProps) {
   return (
-    <section className={`rounded-2xl border border-neutral-200/70 bg-white p-5 sm:p-6 ${className}`}>
-      <div className="mb-5">
-        <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
-        {description && <p className="mt-1 text-xs text-neutral-400">{description}</p>}
+    <section
+      className={cn(
+        'rounded-xl bg-white p-5 shadow-[0_1px_3px_rgba(15,27,61,0.06),0_4px_16px_rgba(15,27,61,0.04)] sm:p-6',
+        className,
+      )}
+    >
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold text-neutral-900">{title}</h2>
+            {titleAddon}
+          </div>
+          {description && <p className="mt-1 text-sm text-neutral-400">{description}</p>}
+        </div>
+        {headerRight && <div className="shrink-0">{headerRight}</div>}
       </div>
       {children}
     </section>

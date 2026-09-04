@@ -11,12 +11,12 @@ function AdminDashboardShell() {
   useCloseAdminSidebarOnNavigate()
 
   return (
-    <div className="min-h-dvh bg-[#fafaf9]">
+    <div className="min-h-dvh bg-[#F5F6FA]">
       <ToastViewport />
       <AdminDashboardSidebar />
       <div className="lg:pl-64">
         <AdminDashboardTopBar />
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8">
           <Outlet />
         </main>
       </div>

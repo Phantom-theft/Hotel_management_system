@@ -140,7 +140,6 @@ export function AdminBookingsPage() {
       {/* Top Stat Cards & Quick Action */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <AdminDashboardStatCard
-          featured
           label="Today's check-ins"
           value={String(checkIns.length)}
           hint={todayQuery.data?.date ?? 'Arrivals today'}

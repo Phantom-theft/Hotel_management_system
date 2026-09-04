@@ -1,15 +1,15 @@
 import type { BookingStatus } from '../../types/api'
 
 const styles: Record<BookingStatus, string> = {
-  pending: 'bg-warning/15 text-warning ring-1 ring-warning/30',
-  confirmed: 'bg-success/15 text-success ring-1 ring-success/30',
-  checked_in: 'bg-accent/15 text-accent ring-1 ring-accent/30',
-  checked_out: 'bg-neutral-200 text-neutral-800 ring-1 ring-neutral-300',
-  cancelled: 'bg-danger/15 text-danger ring-1 ring-danger/30',
+  pending: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  confirmed: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200',
+  checked_in: 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200',
+  checked_out: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  cancelled: 'bg-red-50 text-red-700 ring-1 ring-red-200',
 }
 
 const labels: Record<BookingStatus, string> = {
-  pending: 'Pending payment',
+  pending: 'Pending',
   confirmed: 'Confirmed',
   checked_in: 'Checked in',
   checked_out: 'Checked out',

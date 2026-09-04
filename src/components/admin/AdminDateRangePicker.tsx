@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { ArrowRight, CalendarRange, X } from 'lucide-react'
+import { CalendarDays, ChevronDown, X } from 'lucide-react'
 import { FullScreenCalendar } from '@/components/ui/fullscreen-calendar'
 import { Button } from '@/components/ui/button'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
@@ -67,14 +67,15 @@ export function AdminDateRangePicker({ className = '' }: AdminDateRangePickerPro
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex items-center gap-2 rounded-full border border-neutral-200/80 bg-white px-3.5 py-2 text-xs font-medium text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50 ${className}`}
+        className={`inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs font-medium text-neutral-600 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50 ${className}`}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
-        <CalendarRange className="h-3.5 w-3.5 shrink-0 text-primary/70" aria-hidden />
-        <span className="tabular-nums">{displayFrom}</span>
-        <ArrowRight className="h-3 w-3 shrink-0 text-neutral-300" aria-hidden />
-        <span className="tabular-nums">{displayTo}</span>
+        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#0F1B3D]/70" aria-hidden />
+        <span className="tabular-nums">
+          {displayFrom} – {displayTo}
+        </span>
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
       </button>
 
       {open && (
