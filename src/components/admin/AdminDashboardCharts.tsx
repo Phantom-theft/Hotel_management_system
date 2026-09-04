@@ -56,12 +56,14 @@ export function RoomOccupancyWidget({
   occupied,
   maintenance,
   className,
+  compact = false,
 }: {
   total: number
   available: number
   occupied: number
   maintenance: number
   className?: string
+  compact?: boolean
 }) {
   const segments = [
     { key: 'available', label: 'Available', count: available, color: 'bg-emerald-500', dot: 'bg-emerald-500' },
@@ -72,14 +74,33 @@ export function RoomOccupancyWidget({
   const safeTotal = total > 0 ? total : 0
 
   return (
-    <div className={cn('space-y-5', className)}>
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">Total rooms</p>
-        <p className="mt-1 text-4xl font-bold tracking-tight text-neutral-900">{safeTotal}</p>
+    <div className={cn(compact ? 'space-y-3' : 'space-y-5', className)}>
+      <div className="flex items-end justify-between gap-2">
+        <div>
+          <p
+            className={cn(
+              'font-medium uppercase tracking-wider text-neutral-400',
+              compact ? 'text-[10px]' : 'text-[11px]',
+            )}
+          >
+            Total rooms
+          </p>
+          <p
+            className={cn(
+              'font-bold tracking-tight text-neutral-900',
+              compact ? 'mt-0.5 text-3xl' : 'mt-1 text-4xl',
+            )}
+          >
+            {safeTotal}
+          </p>
+        </div>
       </div>
 
       <div
-        className="flex h-3.5 w-full overflow-hidden rounded-full bg-neutral-100"
+        className={cn(
+          'flex w-full overflow-hidden rounded-full bg-neutral-100',
+          compact ? 'h-2.5' : 'h-3.5',
+        )}
         role="img"
         aria-label={`Room status: ${available} available, ${occupied} occupied, ${maintenance} maintenance`}
       >
@@ -104,12 +125,23 @@ export function RoomOccupancyWidget({
         )}
       </div>
 
-      <ul className="flex flex-wrap gap-x-5 gap-y-2">
+      <ul className={cn(compact ? 'space-y-1.5' : 'flex flex-wrap gap-x-5 gap-y-2')}>
         {segments.map((seg) => (
-          <li key={seg.key} className="inline-flex items-center gap-2 text-sm text-neutral-600">
-            <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', seg.dot)} aria-hidden />
-            <span className="font-medium text-neutral-700">{seg.label}</span>
-            <span className="tabular-nums text-neutral-400">{seg.count}</span>
+          <li
+            key={seg.key}
+            className={cn(
+              'inline-flex items-center gap-2 text-neutral-600',
+              compact ? 'w-full justify-between text-xs' : 'text-sm',
+            )}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span
+                className={cn('shrink-0 rounded-full', compact ? 'h-2 w-2' : 'h-2.5 w-2.5', seg.dot)}
+                aria-hidden
+              />
+              <span className="truncate font-medium text-neutral-700">{seg.label}</span>
+            </span>
+            <span className="shrink-0 tabular-nums text-neutral-400">{seg.count}</span>
           </li>
         ))}
       </ul>
@@ -121,8 +153,10 @@ const DONUT_COLORS = ['#0F1B3D', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#E
 
 export function BookingsByRoomTypeDonut({
   items,
+  compact = false,
 }: {
   items: Array<{ roomTypeId: string; roomTypeName: string; bookings: number }>
+  compact?: boolean
 }) {
   const total = items.reduce((sum, i) => sum + i.bookings, 0)
   const data = items.map((item, index) => ({
@@ -132,12 +166,26 @@ export function BookingsByRoomTypeDonut({
   }))
 
   if (total === 0) {
-    return <p className="py-10 text-center text-sm text-neutral-400">No bookings in this period.</p>
+    return (
+      <p className={cn('text-center text-neutral-400', compact ? 'py-6 text-xs' : 'py-10 text-sm')}>
+        No bookings in this period.
+      </p>
+    )
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-stretch">
-      <div className="relative mx-auto h-48 w-48 shrink-0 sm:mx-0">
+    <div
+      className={cn(
+        'flex flex-col items-center',
+        compact ? 'gap-3' : 'gap-6 sm:flex-row sm:items-stretch',
+      )}
+    >
+      <div
+        className={cn(
+          'relative shrink-0',
+          compact ? 'mx-auto h-36 w-36' : 'mx-auto h-48 w-48 sm:mx-0',
+        )}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -146,8 +194,8 @@ export function BookingsByRoomTypeDonut({
               nameKey="roomTypeName"
               cx="50%"
               cy="50%"
-              innerRadius="62%"
-              outerRadius="88%"
+              innerRadius={compact ? '58%' : '62%'}
+              outerRadius={compact ? '84%' : '88%'}
               paddingAngle={2}
               strokeWidth={0}
             >
@@ -172,21 +220,42 @@ export function BookingsByRoomTypeDonut({
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <p className="text-2xl font-bold tabular-nums tracking-tight text-neutral-900">
+          <p
+            className={cn(
+              'font-bold tabular-nums tracking-tight text-neutral-900',
+              compact ? 'text-xl' : 'text-2xl',
+            )}
+          >
             {total.toLocaleString()}
           </p>
-          <p className="mt-0.5 max-w-[5.5rem] text-[10px] font-medium uppercase leading-tight tracking-wide text-neutral-400">
+          <p
+            className={cn(
+              'font-medium uppercase leading-tight tracking-wide text-neutral-400',
+              compact ? 'mt-0.5 max-w-[4.5rem] text-[9px]' : 'mt-0.5 max-w-[5.5rem] text-[10px]',
+            )}
+          >
             Total Bookings
           </p>
         </div>
       </div>
 
-      <ul className="min-w-0 flex-1 space-y-2.5 self-center">
+      <ul
+        className={cn(
+          'min-w-0 w-full',
+          compact ? 'space-y-1.5' : 'flex-1 space-y-2.5 self-center',
+        )}
+      >
         {data.map((row) => (
-          <li key={row.roomTypeId} className="flex items-center justify-between gap-3 text-sm">
+          <li
+            key={row.roomTypeId}
+            className={cn(
+              'flex items-center justify-between gap-2',
+              compact ? 'text-xs' : 'gap-3 text-sm',
+            )}
+          >
             <span className="flex min-w-0 items-center gap-2">
               <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                className={cn('shrink-0 rounded-full', compact ? 'h-2 w-2' : 'h-2.5 w-2.5')}
                 style={{ backgroundColor: row.fill }}
                 aria-hidden
               />
@@ -194,7 +263,9 @@ export function BookingsByRoomTypeDonut({
             </span>
             <span className="shrink-0 tabular-nums text-neutral-500">
               {row.bookings.toLocaleString()}
-              <span className="ml-2 text-neutral-400">{row.percent}%</span>
+              <span className={cn('text-neutral-400', compact ? 'ml-1.5' : 'ml-2')}>
+                {row.percent}%
+              </span>
             </span>
           </li>
         ))}

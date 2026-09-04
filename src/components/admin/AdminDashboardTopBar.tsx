@@ -39,7 +39,7 @@ export function AdminDashboardTopBar() {
 
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-[1.75rem]">
-                  {greeting}, {firstName} 👋
+                  {greeting}, {firstName}
                 </h1>
                 <p className="mt-1 text-sm text-neutral-500">
                   Here&apos;s what&apos;s happening at Harborlight Hotel today.

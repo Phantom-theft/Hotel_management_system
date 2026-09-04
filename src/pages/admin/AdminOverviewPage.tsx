@@ -277,167 +277,183 @@ export function AdminOverviewPage() {
         </AdminDashboardCard>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <AdminDashboardCard
-          title="Revenue by room type"
-          description={
-            revenue.data
-              ? `${formatCurrency(revenue.data.totalRevenue)} total revenue`
-              : undefined
-          }
-          headerRight={<ChartFilterButton />}
-        >
-          <div className="h-56 sm:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={barData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={CHART_ACCENT} stopOpacity={0.35} />
-                    <stop offset="55%" stopColor={CHART_ACCENT} stopOpacity={0.12} />
-                    <stop offset="100%" stopColor={CHART_ACCENT} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
-                <XAxis
-                  dataKey="roomTypeName"
-                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={44}
-                  tickFormatter={(v) => (v >= 1000 ? `$${v / 1000}k` : `$${v}`)}
-                />
-                <Tooltip
-                  cursor={{ stroke: CHART_ACCENT, strokeWidth: 1, strokeDasharray: '4 4' }}
-                  content={
-                    <AdminChartTooltip
-                      valueFormatter={(v) => formatCurrency(v)}
-                      labelFormatter={(l) => String(l ?? '')}
-                    />
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke={CHART_ACCENT}
-                  strokeWidth={2.5}
-                  fill="url(#revenueAreaFill)"
-                  fillOpacity={1}
-                  dot={{ r: 3, fill: CHART_ACCENT, strokeWidth: 0 }}
-                  activeDot={{ r: 5, fill: CHART_ACCENT, stroke: '#fff', strokeWidth: 2 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </AdminDashboardCard>
-
-        <AdminDashboardCard title="Occupancy trend" headerRight={<ChartFilterButton />}>
-          <div className="h-56 sm:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={occupancy.data?.days ?? []} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="occupancyAreaFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.32} />
-                    <stop offset="55%" stopColor={CHART_PRIMARY} stopOpacity={0.1} />
-                    <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                  axisLine={false}
-                  tickLine={false}
-                  minTickGap={28}
-                />
-                <YAxis
-                  unit="%"
-                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                  axisLine={false}
-                  tickLine={false}
-                  domain={[0, 100]}
-                  width={40}
-                />
-                <Tooltip
-                  cursor={{ stroke: CHART_PRIMARY, strokeWidth: 1, strokeDasharray: '4 4' }}
-                  content={
-                    <AdminChartTooltip
-                      valueFormatter={(v) => `${v.toFixed(1)}%`}
-                      labelFormatter={(l) => String(l ?? '')}
-                    />
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="occupancyRate"
-                  name="Occupancy"
-                  stroke={CHART_PRIMARY}
-                  strokeWidth={2.5}
-                  fill="url(#occupancyAreaFill)"
-                  fillOpacity={1}
-                  dot={false}
-                  activeDot={{ r: 5, fill: CHART_PRIMARY, stroke: '#fff', strokeWidth: 2 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </AdminDashboardCard>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <AdminDashboardCard
-          title="Bookings by Room Type"
-          description="Share of bookings created in the selected period"
-        >
-          <BookingsByRoomTypeDonut items={revenue.data?.bookingsByRoomType ?? []} />
-        </AdminDashboardCard>
-
-        <AdminDashboardCard
-          title="Overall Ratings"
-          description="Across all room types"
-          headerRight={
-            <Link
-              to="/admin/reviews"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.38fr)]">
+        {/* Left: main charts (~70%) */}
+        <div className="order-1 flex min-w-0 flex-col gap-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <AdminDashboardCard
+              title="Revenue by room type"
+              description={
+                revenue.data
+                  ? `${formatCurrency(revenue.data.totalRevenue)} total revenue`
+                  : undefined
+              }
+              headerRight={<ChartFilterButton />}
             >
-              View reviews
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            </Link>
-          }
-        >
-          <OverallRatingsWidget
-            avgRating={overallReviews.avgRating}
-            totalReviews={overallReviews.totalReviews}
-          />
-        </AdminDashboardCard>
+              <div className="h-52 sm:h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={barData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={CHART_ACCENT} stopOpacity={0.35} />
+                        <stop offset="55%" stopColor={CHART_ACCENT} stopOpacity={0.12} />
+                        <stop offset="100%" stopColor={CHART_ACCENT} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
+                    <XAxis
+                      dataKey="roomTypeName"
+                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={44}
+                      tickFormatter={(v) => (v >= 1000 ? `$${v / 1000}k` : `$${v}`)}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: CHART_ACCENT, strokeWidth: 1, strokeDasharray: '4 4' }}
+                      content={
+                        <AdminChartTooltip
+                          valueFormatter={(v) => formatCurrency(v)}
+                          labelFormatter={(l) => String(l ?? '')}
+                        />
+                      }
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      name="Revenue"
+                      stroke={CHART_ACCENT}
+                      strokeWidth={2.5}
+                      fill="url(#revenueAreaFill)"
+                      fillOpacity={1}
+                      dot={{ r: 3, fill: CHART_ACCENT, strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: CHART_ACCENT, stroke: '#fff', strokeWidth: 2 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </AdminDashboardCard>
+
+            <AdminDashboardCard title="Occupancy trend" headerRight={<ChartFilterButton />}>
+              <div className="h-52 sm:h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={occupancy.data?.days ?? []}
+                    margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="occupancyAreaFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.32} />
+                        <stop offset="55%" stopColor={CHART_PRIMARY} stopOpacity={0.1} />
+                        <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                      axisLine={false}
+                      tickLine={false}
+                      minTickGap={28}
+                    />
+                    <YAxis
+                      unit="%"
+                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                      axisLine={false}
+                      tickLine={false}
+                      domain={[0, 100]}
+                      width={40}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: CHART_PRIMARY, strokeWidth: 1, strokeDasharray: '4 4' }}
+                      content={
+                        <AdminChartTooltip
+                          valueFormatter={(v) => `${v.toFixed(1)}%`}
+                          labelFormatter={(l) => String(l ?? '')}
+                        />
+                      }
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="occupancyRate"
+                      name="Occupancy"
+                      stroke={CHART_PRIMARY}
+                      strokeWidth={2.5}
+                      fill="url(#occupancyAreaFill)"
+                      fillOpacity={1}
+                      dot={false}
+                      activeDot={{ r: 5, fill: CHART_PRIMARY, stroke: '#fff', strokeWidth: 2 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </AdminDashboardCard>
+          </div>
+        </div>
+
+        {/* Right: compact Room Occupancy + Bookings donut (~30%) */}
+        <div className="order-2 flex min-w-0 flex-col gap-4 xl:row-span-2">
+          <AdminDashboardCard
+            dense
+            title="Room Occupancy"
+            description="Live room status"
+            headerRight={
+              <Link
+                to="/admin/rooms"
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-[#0F1B3D] transition hover:underline"
+              >
+                Manage
+                <ArrowRight className="h-3 w-3" aria-hidden />
+              </Link>
+            }
+          >
+            <RoomOccupancyWidget
+              compact
+              total={roomStats.total}
+              available={roomStats.available}
+              occupied={roomStats.occupied}
+              maintenance={roomStats.maintenance}
+            />
+          </AdminDashboardCard>
+
+          <AdminDashboardCard
+            dense
+            title="Bookings by Room Type"
+            description="Selected period share"
+          >
+            <BookingsByRoomTypeDonut compact items={revenue.data?.bookingsByRoomType ?? []} />
+          </AdminDashboardCard>
+        </div>
+
+        {/* Under charts on desktop; after sidebar widgets on mobile */}
+        <div className="order-3 min-w-0 xl:col-start-1">
+          <AdminDashboardCard
+            title="Overall Ratings"
+            description="Across all room types"
+            headerRight={
+              <Link
+                to="/admin/reviews"
+                className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
+              >
+                View reviews
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            }
+          >
+            <OverallRatingsWidget
+              avgRating={overallReviews.avgRating}
+              totalReviews={overallReviews.totalReviews}
+            />
+          </AdminDashboardCard>
+        </div>
       </div>
 
-      <AdminDashboardCard
-        title="Room Occupancy"
-        description="Live breakdown by room status"
-        headerRight={
-          <Link
-            to="/admin/rooms"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
-          >
-            Manage rooms
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-          </Link>
-        }
-      >
-        <RoomOccupancyWidget
-          total={roomStats.total}
-          available={roomStats.available}
-          occupied={roomStats.occupied}
-          maintenance={roomStats.maintenance}
-        />
-      </AdminDashboardCard>
-
+      {/* Full-width bottom section */}
       <AdminDashboardCard
         title="Today's arrivals & departures"
         description={

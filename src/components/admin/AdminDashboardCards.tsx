@@ -98,6 +98,7 @@ interface AdminDashboardCardProps {
   className?: string
   headerRight?: ReactNode
   titleAddon?: ReactNode
+  dense?: boolean
 }
 
 export function AdminDashboardCard({
@@ -107,21 +108,34 @@ export function AdminDashboardCard({
   className = '',
   headerRight,
   titleAddon,
+  dense = false,
 }: AdminDashboardCardProps) {
   return (
     <section
       className={cn(
-        'rounded-xl bg-white p-5 shadow-[0_1px_3px_rgba(15,27,61,0.06),0_4px_16px_rgba(15,27,61,0.04)] sm:p-6',
+        'rounded-xl bg-white shadow-[0_1px_3px_rgba(15,27,61,0.06),0_4px_16px_rgba(15,27,61,0.04)]',
+        dense ? 'p-4' : 'p-5 sm:p-6',
         className,
       )}
     >
-      <div className="mb-5 flex items-start justify-between gap-3">
+      <div className={cn('flex items-start justify-between gap-3', dense ? 'mb-3' : 'mb-5')}>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-neutral-900">{title}</h2>
+            <h2
+              className={cn(
+                'font-semibold text-neutral-900',
+                dense ? 'text-sm' : 'text-base',
+              )}
+            >
+              {title}
+            </h2>
             {titleAddon}
           </div>
-          {description && <p className="mt-1 text-sm text-neutral-400">{description}</p>}
+          {description && (
+            <p className={cn('text-neutral-400', dense ? 'mt-0.5 text-[11px]' : 'mt-1 text-sm')}>
+              {description}
+            </p>
+          )}
         </div>
         {headerRight && <div className="shrink-0">{headerRight}</div>}
       </div>
