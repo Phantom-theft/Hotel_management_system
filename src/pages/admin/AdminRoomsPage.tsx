@@ -265,11 +265,11 @@ function RoomTypesSection({
                           <img
                             src={t.images[0]}
                             alt={t.name}
-                            className="h-12 w-14 shrink-0 rounded-lg border border-neutral-200 object-cover shadow-2xs"
+                            className="h-16 w-24 shrink-0 rounded-lg border border-neutral-200 object-cover shadow-2xs"
                           />
                         ) : (
-                          <div className="flex h-12 w-14 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100 text-neutral-400 shadow-2xs">
-                            <BedDouble className="h-5 w-5" />
+                          <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100 text-neutral-400 shadow-2xs">
+                            <BedDouble className="h-6 w-6" />
                           </div>
                         )}
                         <div>

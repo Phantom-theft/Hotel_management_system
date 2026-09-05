@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import {
@@ -13,13 +13,9 @@ import {
 import {
   ArrowRight,
   BookPlus,
-  CalendarCheck,
-  CalendarMinus,
   ChevronDown,
-  DoorOpen,
   LogIn,
   LogOut,
-  Users,
   Wallet,
   Wrench,
 } from 'lucide-react'
@@ -130,15 +126,14 @@ export function AdminOverviewPage() {
   }, [today.data])
 
   const occupancyRate = occupancy.data?.overallOccupancyRate ?? 0
-  const totalRooms = roomStats.total || occupancy.data?.totalRooms || 0
   const barData = revenue.data?.byRoomType ?? []
 
   return (
     <div className="space-y-6">
       {loading ? (
-        <BookingListSkeleton count={4} />
+        <BookingListSkeleton count={5} />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <AdminDashboardStatCard
             label="Total Revenue"
             value={
@@ -181,67 +176,131 @@ export function AdminOverviewPage() {
             changeSuffix={changeSuffix}
             hint="No prior-period baseline"
           />
+          <AdminDashboardStatCard
+            label="Maintenance"
+            value={roomsQuery.isLoading ? '—' : String(roomStats.maintenance)}
+            icon={Wrench}
+            iconClassName="bg-orange-50 text-orange-600"
+            hint="Rooms out of service"
+          />
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
-        <AdminDashboardCard
-          title="Live status"
-          headerRight={
-            <span className="inline-flex items-center gap-2 text-xs font-medium text-neutral-500">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-              Real-time updates
-            </span>
-          }
-        >
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5">
-            <StatusMetric
-              label="Total rooms"
-              value={totalRooms || '—'}
-              caption="In system"
-              icon={<Users className="h-4 w-4" />}
-              badgeClass="bg-blue-50 text-blue-600"
-            />
-            <StatusMetric
-              label="Available"
-              value={roomStats.available}
-              caption={totalRooms ? `${Math.round((roomStats.available / totalRooms) * 100)}% of total` : 'Ready'}
-              icon={<DoorOpen className="h-4 w-4" />}
-              badgeClass="bg-emerald-50 text-emerald-600"
-            />
-            <StatusMetric
-              label="Occupied"
-              value={roomStats.occupied}
-              caption={totalRooms ? `${Math.round((roomStats.occupied / totalRooms) * 100)}% of total` : 'In use'}
-              icon={<Users className="h-4 w-4" />}
-              badgeClass="bg-indigo-50 text-indigo-600"
-            />
-            <StatusMetric
-              label="Maintenance"
-              value={roomStats.maintenance}
-              caption="Out of service"
-              icon={<Wrench className="h-4 w-4" />}
-              badgeClass="bg-orange-50 text-orange-600"
-            />
-            <StatusMetric
-              label="Check-ins today"
-              value={today.data?.checkIns.length ?? 0}
-              caption="Arrivals"
-              icon={<CalendarCheck className="h-4 w-4" />}
-              badgeClass="bg-sky-50 text-sky-600"
-            />
-            <StatusMetric
-              label="Check-outs today"
-              value={today.data?.checkOuts.length ?? 0}
-              caption="Departures"
-              icon={<CalendarMinus className="h-4 w-4" />}
-              badgeClass="bg-violet-50 text-violet-600"
-            />
-          </div>
-        </AdminDashboardCard>
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+          <AdminDashboardCard
+            title="Revenue by room type"
+            description={
+              revenue.data
+                ? `${formatCurrency(revenue.data.totalRevenue)} total revenue`
+                : undefined
+            }
+            headerRight={<ChartFilterButton />}
+          >
+            <div className="h-52 sm:h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={barData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={CHART_ACCENT} stopOpacity={0.35} />
+                      <stop offset="55%" stopColor={CHART_ACCENT} stopOpacity={0.12} />
+                      <stop offset="100%" stopColor={CHART_ACCENT} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
+                  <XAxis
+                    dataKey="roomTypeName"
+                    tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={44}
+                    tickFormatter={(v) => (v >= 1000 ? `$${v / 1000}k` : `$${v}`)}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: CHART_ACCENT, strokeWidth: 1, strokeDasharray: '4 4' }}
+                    content={
+                      <AdminChartTooltip
+                        valueFormatter={(v) => formatCurrency(v)}
+                        labelFormatter={(l) => String(l ?? '')}
+                      />
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue"
+                    stroke={CHART_ACCENT}
+                    strokeWidth={2.5}
+                    fill="url(#revenueAreaFill)"
+                    fillOpacity={1}
+                    dot={{ r: 3, fill: CHART_ACCENT, strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: CHART_ACCENT, stroke: '#fff', strokeWidth: 2 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </AdminDashboardCard>
+
+          <AdminDashboardCard title="Occupancy trend" headerRight={<ChartFilterButton />}>
+            <div className="h-52 sm:h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={occupancy.data?.days ?? []}
+                  margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="occupancyAreaFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.32} />
+                      <stop offset="55%" stopColor={CHART_PRIMARY} stopOpacity={0.1} />
+                      <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                    axisLine={false}
+                    tickLine={false}
+                    minTickGap={28}
+                  />
+                  <YAxis
+                    unit="%"
+                    tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={[0, 100]}
+                    width={40}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: CHART_PRIMARY, strokeWidth: 1, strokeDasharray: '4 4' }}
+                    content={
+                      <AdminChartTooltip
+                        valueFormatter={(v) => `${v.toFixed(1)}%`}
+                        labelFormatter={(l) => String(l ?? '')}
+                      />
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="occupancyRate"
+                    name="Occupancy"
+                    stroke={CHART_PRIMARY}
+                    strokeWidth={2.5}
+                    fill="url(#occupancyAreaFill)"
+                    fillOpacity={1}
+                    dot={false}
+                    activeDot={{ r: 5, fill: CHART_PRIMARY, stroke: '#fff', strokeWidth: 2 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </AdminDashboardCard>
+        </div>
 
         <AdminDashboardCard
           title="Occupancy"
@@ -278,126 +337,8 @@ export function AdminOverviewPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.38fr)]">
-        {/* Left: main charts (~70%) */}
-        <div className="order-1 flex min-w-0 flex-col gap-4">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <AdminDashboardCard
-              title="Revenue by room type"
-              description={
-                revenue.data
-                  ? `${formatCurrency(revenue.data.totalRevenue)} total revenue`
-                  : undefined
-              }
-              headerRight={<ChartFilterButton />}
-            >
-              <div className="h-52 sm:h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={barData} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={CHART_ACCENT} stopOpacity={0.35} />
-                        <stop offset="55%" stopColor={CHART_ACCENT} stopOpacity={0.12} />
-                        <stop offset="100%" stopColor={CHART_ACCENT} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
-                    <XAxis
-                      dataKey="roomTypeName"
-                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                      axisLine={false}
-                      tickLine={false}
-                      width={44}
-                      tickFormatter={(v) => (v >= 1000 ? `$${v / 1000}k` : `$${v}`)}
-                    />
-                    <Tooltip
-                      cursor={{ stroke: CHART_ACCENT, strokeWidth: 1, strokeDasharray: '4 4' }}
-                      content={
-                        <AdminChartTooltip
-                          valueFormatter={(v) => formatCurrency(v)}
-                          labelFormatter={(l) => String(l ?? '')}
-                        />
-                      }
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="revenue"
-                      name="Revenue"
-                      stroke={CHART_ACCENT}
-                      strokeWidth={2.5}
-                      fill="url(#revenueAreaFill)"
-                      fillOpacity={1}
-                      dot={{ r: 3, fill: CHART_ACCENT, strokeWidth: 0 }}
-                      activeDot={{ r: 5, fill: CHART_ACCENT, stroke: '#fff', strokeWidth: 2 }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </AdminDashboardCard>
-
-            <AdminDashboardCard title="Occupancy trend" headerRight={<ChartFilterButton />}>
-              <div className="h-52 sm:h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={occupancy.data?.days ?? []}
-                    margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="occupancyAreaFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.32} />
-                        <stop offset="55%" stopColor={CHART_PRIMARY} stopOpacity={0.1} />
-                        <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke={CHART_MUTED} strokeDasharray="0" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                      axisLine={false}
-                      tickLine={false}
-                      minTickGap={28}
-                    />
-                    <YAxis
-                      unit="%"
-                      tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                      axisLine={false}
-                      tickLine={false}
-                      domain={[0, 100]}
-                      width={40}
-                    />
-                    <Tooltip
-                      cursor={{ stroke: CHART_PRIMARY, strokeWidth: 1, strokeDasharray: '4 4' }}
-                      content={
-                        <AdminChartTooltip
-                          valueFormatter={(v) => `${v.toFixed(1)}%`}
-                          labelFormatter={(l) => String(l ?? '')}
-                        />
-                      }
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="occupancyRate"
-                      name="Occupancy"
-                      stroke={CHART_PRIMARY}
-                      strokeWidth={2.5}
-                      fill="url(#occupancyAreaFill)"
-                      fillOpacity={1}
-                      dot={false}
-                      activeDot={{ r: 5, fill: CHART_PRIMARY, stroke: '#fff', strokeWidth: 2 }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </AdminDashboardCard>
-          </div>
-        </div>
-
-        {/* Right: compact Room Occupancy + Bookings donut (~30%) */}
-        <div className="order-2 flex min-w-0 flex-col gap-4 xl:row-span-2">
+        {/* Right: compact Room Occupancy + Bookings donut */}
+        <div className="order-2 flex min-w-0 flex-col gap-4 xl:order-2 xl:row-span-1 xl:col-start-2">
           <AdminDashboardCard
             dense
             title="Room Occupancy"
@@ -430,8 +371,7 @@ export function AdminOverviewPage() {
           </AdminDashboardCard>
         </div>
 
-        {/* Under charts on desktop; after sidebar widgets on mobile */}
-        <div className="order-3 min-w-0 xl:col-start-1">
+        <div className="order-1 min-w-0 xl:col-start-1 xl:row-start-1">
           <AdminDashboardCard
             title="Overall Ratings"
             description="Across all room types"
@@ -477,31 +417,6 @@ export function AdminOverviewPage() {
           <AdminBookingTable bookings={recentBookings} emptyMessage="No activity today." />
         )}
       </AdminDashboardCard>
-    </div>
-  )
-}
-
-function StatusMetric({
-  label,
-  value,
-  caption,
-  icon,
-  badgeClass,
-}: {
-  label: string
-  value: number | string
-  caption: string
-  icon: ReactNode
-  badgeClass: string
-}) {
-  return (
-    <div className="rounded-xl bg-[#F8F9FC] p-3.5 sm:p-4">
-      <div className="flex items-center gap-2">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${badgeClass}`}>{icon}</div>
-        <p className="text-[11px] font-medium uppercase tracking-wider text-neutral-400">{label}</p>
-      </div>
-      <p className="mt-2.5 text-2xl font-bold tracking-tight text-neutral-900">{value}</p>
-      <p className="mt-0.5 text-xs text-neutral-400">{caption}</p>
     </div>
   )
 }

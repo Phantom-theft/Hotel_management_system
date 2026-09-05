@@ -188,7 +188,11 @@ describe('refactor smoke — pages mount', () => {
     expect(screen.getByText('New Bookings')).toBeInTheDocument()
     expect(screen.getByText('Check-ins')).toBeInTheDocument()
     expect(screen.getByText('Check-outs')).toBeInTheDocument()
+    expect(screen.getByText('Maintenance')).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Room Occupancy' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Revenue by room type' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Occupancy trend' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Live status' })).not.toBeInTheDocument()
     expect(
       screen.getByRole('img', { name: /Room status: 2 available, 1 occupied, 1 maintenance/i }),
     ).toBeInTheDocument()
