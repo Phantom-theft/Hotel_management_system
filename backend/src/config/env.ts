@@ -40,6 +40,13 @@ export const env = {
     from: process.env.SMTP_FROM ?? 'hotel@example.com',
   },
   hotelName: process.env.HOTEL_NAME ?? 'Hotel Management System',
+  cloudinary: {
+    /** Prefer CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name */
+    url: process.env.CLOUDINARY_URL ?? '',
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME ?? '',
+    apiKey: process.env.CLOUDINARY_API_KEY ?? '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET ?? '',
+  },
 };
 
 export const REFRESH_TOKEN_COOKIE = 'refreshToken';

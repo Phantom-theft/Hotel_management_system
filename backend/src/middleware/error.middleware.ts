@@ -12,6 +12,15 @@ export function errorHandler(
     return;
   }
 
+  // express.json / raw body parser size limit
+  if (
+    (err as { type?: string; status?: number; statusCode?: number }).type === 'entity.too.large' ||
+    (err as { status?: number }).status === 413
+  ) {
+    res.status(413).json({ error: 'Request body is too large' });
+    return;
+  }
+
   console.error(err);
   res.status(500).json({ error: 'Internal server error' });
 }

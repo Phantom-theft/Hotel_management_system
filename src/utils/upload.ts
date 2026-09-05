@@ -1,6 +1,7 @@
 /**
- * Upload an image to Cloudinary (unsigned preset) when env is configured.
- * Falls back to rejecting so the UI can accept a pasted URL instead.
+ * Client-side Cloudinary unsigned upload is no longer used for room types.
+ * Images go through the API as multipart (Multer → Cloudinary on the server).
+ * Kept only if a legacy caller still needs a direct unsigned upload.
  */
 export async function uploadImage(file: File): Promise<string> {
   const cloud = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined
@@ -8,7 +9,7 @@ export async function uploadImage(file: File): Promise<string> {
 
   if (!cloud || !preset) {
     throw new Error(
-      'Cloudinary is not configured. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET, or paste an image URL.',
+      'Direct Cloudinary upload is not configured. Use the room type form to upload via the API, or paste an image URL.',
     )
   }
 

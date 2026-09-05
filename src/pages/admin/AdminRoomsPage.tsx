@@ -1,4 +1,4 @@
-import { useState, useMemo, type ChangeEvent, type FormEvent } from 'react'
+import { useState, useMemo, useEffect, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   BedDouble,
@@ -12,7 +12,6 @@ import {
   Table,
   Trash2,
   Tv,
-  Upload,
   Users,
   Wifi,
   X,
@@ -27,10 +26,10 @@ import {
   updateRoom,
   updateRoomType,
 } from '../../api/hotel'
+import { AdminImageField } from '../../components/admin/AdminImageField'
 import { Modal } from '../../components/ui/Modal'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { toast } from '../../store/toastStore'
-import { cloudinaryConfigured, uploadImage } from '../../utils/upload'
 import type { Room, RoomStatus, RoomType } from '../../types/api'
 
 export function AdminRoomsPage() {
@@ -42,6 +41,7 @@ export function AdminRoomsPage() {
   const [deleteRoomTarget, setDeleteRoomTarget] = useState<Room | null>(null)
   const [editingType, setEditingType] = useState<RoomType | null>(null)
   const [isCreateTypeOpen, setIsCreateTypeOpen] = useState(false)
+  const [isAddRoomOpen, setIsAddRoomOpen] = useState(false)
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['room-types'] })
@@ -90,6 +90,7 @@ export function AdminRoomsPage() {
         onCreate={() => {
           setEditingType(null)
           setIsCreateTypeOpen(true)
+          toast('Upload a room photo from your device, or paste an image URL.', 'info')
         }}
         onEdit={(t) => {
           setEditingType(t)
@@ -106,17 +107,10 @@ export function AdminRoomsPage() {
           loading={roomsQuery.isLoading}
           onAskDelete={setDeleteRoomTarget}
           onSaved={invalidate}
+          onAddRoom={() => setIsAddRoomOpen(true)}
         />
-        <RoomStatusOverviewSection
-          rooms={rooms}
-        />
+        <RoomStatusOverviewSection rooms={rooms} />
       </div>
-
-      {/* SECTION 3: Quick add room */}
-      <QuickAddRoomSection
-        types={types}
-        onSaved={invalidate}
-      />
 
       {/* Create / Edit Room Type Modal */}
       <CreateOrEditRoomTypeModal
@@ -129,6 +123,17 @@ export function AdminRoomsPage() {
         onSaved={() => {
           setIsCreateTypeOpen(false)
           setEditingType(null)
+          invalidate()
+        }}
+      />
+
+      {/* Add Room Modal */}
+      <CreateRoomModal
+        open={isAddRoomOpen}
+        types={types}
+        onClose={() => setIsAddRoomOpen(false)}
+        onSaved={() => {
+          setIsAddRoomOpen(false)
           invalidate()
         }}
       />
@@ -359,69 +364,51 @@ function CreateOrEditRoomTypeModal({
   const [capacity, setCapacity] = useState(2)
   const [description, setDescription] = useState('')
   const [amenities, setAmenities] = useState('')
-  const [images, setImages] = useState<string[]>([])
-  const [urlInput, setUrlInput] = useState('')
-  const [uploading, setUploading] = useState(false)
-
-  const canUpload = cloudinaryConfigured()
+  const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [imageFiles, setImageFiles] = useState<File[]>([])
 
   // Sync state with editing prop
-  useMemo(() => {
+  useEffect(() => {
+    if (!open) return
     if (editing) {
       setName(editing.name)
       setBasePrice(editing.basePrice)
       setCapacity(editing.capacity)
       setDescription(editing.description ?? '')
       setAmenities(editing.amenities.join(', '))
-      setImages(editing.images ?? [])
+      setImageUrls(editing.images ?? [])
     } else {
       setName('')
       setBasePrice(100)
       setCapacity(2)
       setDescription('')
       setAmenities('')
-      setImages([])
+      setImageUrls([])
     }
-    setUrlInput('')
+    setImageFiles([])
   }, [editing, open])
-
-  function handleAddUrl() {
-    const trimmed = urlInput.trim()
-    if (!trimmed) return
-    setImages((prev) => [...prev, trimmed])
-    setUrlInput('')
-  }
-
-  async function handleFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const secureUrl = await uploadImage(file)
-      setImages((prev) => [...prev, secureUrl])
-      toast('Image uploaded', 'success')
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Upload failed', 'error')
-    } finally {
-      setUploading(false)
-      e.target.value = ''
-    }
-  }
 
   const saveMut = useMutation({
     mutationFn: async () => {
+      const amenitiesList = amenities
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
       const payload = {
         name,
         basePrice,
         capacity,
         description: description || undefined,
-        amenities: amenities
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-        images,
+        amenities: amenitiesList,
+        images: imageUrls,
+        imageFiles: imageFiles.length ? imageFiles : undefined,
       }
-      if (editing) return updateRoomType(editing.id, payload)
+      if (editing) {
+        return updateRoomType(editing.id, {
+          ...payload,
+          description: description || null,
+        })
+      }
       return createRoomType(payload)
     },
     onSuccess: () => {
@@ -453,6 +440,7 @@ function CreateOrEditRoomTypeModal({
           </button>
         </div>
 
+        
         <form
           onSubmit={(e: FormEvent) => {
             e.preventDefault()
@@ -523,74 +511,14 @@ function CreateOrEditRoomTypeModal({
               />
             </div>
 
-            {/* Row 4: Image URL with docked Add URL button */}
-            <div className="sm:col-span-2 space-y-2">
-              <label className="block text-xs font-medium text-neutral-500">Images</label>
-
-              {images.length > 0 && (
-                <div className="flex flex-wrap gap-2 pb-1">
-                  {images.map((src, i) => (
-                    <div
-                      key={`${src}-${i}`}
-                      className="group relative h-16 w-20 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 shadow-2xs"
-                    >
-                      <img src={src} alt="Room" className="h-full w-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="absolute right-1 top-1 rounded bg-neutral-900/80 p-0.5 text-white transition hover:bg-neutral-900"
-                        title="Remove image"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleAddUrl()
-                    }
-                  }}
-                  placeholder="Paste image URL"
-                  className="w-full rounded-lg border border-neutral-200 bg-white py-2.5 pl-3.5 pr-24 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddUrl}
-                  className="absolute right-1.5 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-200 hover:text-neutral-900"
-                >
-                  Add URL
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between pt-0.5">
-                {canUpload ? (
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-primary hover:underline">
-                    <Upload className="h-3.5 w-3.5" />
-                    <span>{uploading ? 'Uploading…' : 'Or upload image file'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFile}
-                      disabled={uploading}
-                    />
-                  </label>
-                ) : (
-                  <p className="text-xs text-neutral-400">
-                    Optional: set VITE_CLOUDINARY_CLOUD_NAME + VITE_CLOUDINARY_UPLOAD_PRESET for file
-                    uploads.
-                  </p>
-                )}
-              </div>
+            {/* Row 4: Images — multipart file upload + URL fallback */}
+            <div className="sm:col-span-2">
+              <AdminImageField
+                imageUrls={imageUrls}
+                onUrlsChange={setImageUrls}
+                imageFiles={imageFiles}
+                onFilesChange={setImageFiles}
+              />
             </div>
           </div>
 
@@ -622,12 +550,14 @@ function RoomsInventorySection({
   loading,
   onAskDelete,
   onSaved,
+  onAddRoom,
 }: {
   rooms: Room[]
   types: RoomType[]
   loading: boolean
   onAskDelete: (r: Room) => void
   onSaved: () => void
+  onAddRoom: () => void
 }) {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [floorFilter, setFloorFilter] = useState<string>('all')
@@ -703,31 +633,42 @@ function RoomsInventorySection({
           </p>
         </div>
 
-        {/* View toggles */}
-        <div className="flex items-center gap-2">
+        {/* View toggles & Add room */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                viewMode === 'grid'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Grid</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                viewMode === 'table'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+              }`}
+            >
+              <Table className="h-3.5 w-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
+
           <button
             type="button"
-            onClick={() => setViewMode('grid')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
-              viewMode === 'grid'
-                ? 'bg-primary text-white shadow-sm'
-                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
-            }`}
+            onClick={onAddRoom}
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-light"
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span>Floor Plan Grid</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('table')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
-              viewMode === 'table'
-                ? 'bg-primary text-white shadow-sm'
-                : 'border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
-            }`}
-          >
-            <Table className="h-3.5 w-3.5" />
-            <span>Table View</span>
+            <Plus className="h-3.5 w-3.5" />
+            <span>+ Add room</span>
           </button>
         </div>
       </div>
@@ -953,11 +894,15 @@ function RoomsInventorySection({
   )
 }
 
-function QuickAddRoomSection({
+function CreateRoomModal({
+  open,
   types,
+  onClose,
   onSaved,
 }: {
+  open: boolean
   types: RoomType[]
+  onClose: () => void
   onSaved: () => void
 }) {
   const [roomTypeId, setRoomTypeId] = useState('')
@@ -965,11 +910,23 @@ function QuickAddRoomSection({
   const [floor, setFloor] = useState(1)
   const [status, setStatus] = useState<RoomStatus>('available')
 
+  const resetForm = () => {
+    setRoomTypeId('')
+    setRoomNumber('')
+    setFloor(1)
+    setStatus('available')
+  }
+
+  const handleClose = () => {
+    resetForm()
+    onClose()
+  }
+
   const createMut = useMutation({
     mutationFn: () => createRoom({ roomTypeId, roomNumber, floor, status }),
     onSuccess: () => {
       toast('Room created', 'success')
-      setRoomNumber('')
+      resetForm()
       onSaved()
     },
     onError: (err: unknown) =>
@@ -980,97 +937,124 @@ function QuickAddRoomSection({
       ),
   })
 
+  if (!open) return null
+
   return (
-    <section className="rounded-xl border border-neutral-200/80 bg-white p-6 shadow-sm">
-      <div>
-        <h3 className="text-lg font-bold text-neutral-900">Quick add room</h3>
-        <p className="mt-0.5 text-xs text-neutral-500">
-          Add a new room quickly to the inventory.
-        </p>
-      </div>
-
-      <form
-        onSubmit={(e: FormEvent) => {
-          e.preventDefault()
-          createMut.mutate()
-        }}
-        className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end"
-      >
-        {/* 1. Room Type */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-neutral-500">Room Type</label>
-          <div className="relative">
-            <select
-              required
-              value={roomTypeId}
-              onChange={(e) => setRoomTypeId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-sm text-neutral-800 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
-            >
-              <option value="">Select room type</option>
-              {types.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose()
+      }}
+    >
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl border border-neutral-200">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-neutral-900">Add room</h3>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Add a new room to your hotel inventory.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* 2. Room Number */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-neutral-500">Room Number</label>
-          <input
-            required
-            placeholder="e.g. 101"
-            value={roomNumber}
-            onChange={(e) => setRoomNumber(e.target.value)}
-            className="w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
-          />
-        </div>
-
-        {/* 3. Floor */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-neutral-500">Floor</label>
-          <input
-            type="number"
-            min={1}
-            required
-            placeholder="e.g. 1"
-            value={floor}
-            onChange={(e) => setFloor(Number(e.target.value))}
-            className="w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
-          />
-        </div>
-
-        {/* 4. Status */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-neutral-500">Status</label>
-          <div className="relative">
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as RoomStatus)}
-              className="w-full appearance-none rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-sm capitalize text-neutral-800 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
-            >
-              <option value="available">Available</option>
-              <option value="occupied">Occupied</option>
-              <option value="maintenance">Maintenance</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-          </div>
-        </div>
-
-        {/* 5. Dark navy + Add Room button */}
-        <button
-          type="submit"
-          disabled={createMut.isPending}
-          className="inline-flex h-[42px] items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-light disabled:opacity-60"
+        <form
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault()
+            createMut.mutate()
+          }}
+          className="mt-4 space-y-4"
         >
-          <Plus className="h-4 w-4" />
-          <span>{createMut.isPending ? 'Adding…' : '+ Add Room'}</span>
-        </button>
-      </form>
-    </section>
+          {/* 1. Room Type */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-neutral-500">Room Type</label>
+            <div className="relative">
+              <select
+                required
+                value={roomTypeId}
+                onChange={(e) => setRoomTypeId(e.target.value)}
+                className="w-full appearance-none rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-sm text-neutral-800 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+              >
+                <option value="">Select room type</option>
+                {types.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            </div>
+          </div>
+
+          {/* 2. Room Number & Floor */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-neutral-500">Room Number</label>
+              <input
+                required
+                placeholder="e.g. 101"
+                value={roomNumber}
+                onChange={(e) => setRoomNumber(e.target.value)}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-neutral-500">Floor</label>
+              <input
+                type="number"
+                min={1}
+                required
+                placeholder="e.g. 1"
+                value={floor}
+                onChange={(e) => setFloor(Number(e.target.value))}
+                className="w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 placeholder:text-neutral-400 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+              />
+            </div>
+          </div>
+
+          {/* 3. Status */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-neutral-500">Status</label>
+            <div className="relative">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as RoomStatus)}
+                className="w-full appearance-none rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 pr-8 text-sm capitalize text-neutral-800 transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
+              >
+                <option value="available">Available</option>
+                <option value="occupied">Occupied</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 border-t border-neutral-100 pt-4">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createMut.isPending}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-light disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{createMut.isPending ? 'Adding…' : 'Add Room'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
 

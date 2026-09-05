@@ -25,8 +25,6 @@ Configure `.env`:
 |----------|----------|-------------|
 | `VITE_API_BASE_URL` | Yes | API base, default `http://localhost:3001/api` |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | For payments | Stripe test publishable key |
-| `VITE_CLOUDINARY_CLOUD_NAME` | Optional | Admin room image uploads |
-| `VITE_CLOUDINARY_UPLOAD_PRESET` | Optional | Unsigned Cloudinary preset |
 
 ```bash
 npm install

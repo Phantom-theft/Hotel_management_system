@@ -100,6 +100,8 @@ Demo credentials after seed:
 ### Admin
 | Method | Path | Access |
 |--------|------|--------|
+| CRUD | `/api/room-types` | admin — create/update accept JSON **or** `multipart/form-data` (`images` files → Cloudinary; `imageUrls` for pasted URLs) |
+| CRUD | `/api/rooms` | admin |
 | GET | `/api/reports/occupancy` \| `/revenue` \| `/cancellations` | admin |
 | CRUD | `/api/promo-codes` | admin |
 | POST | `/api/staff/invite` | admin |
@@ -124,6 +126,8 @@ Revenue reports use **paid Payment** rows only.
 | `BOOKING_PENDING_TTL_MINUTES` | `30` | pending hold lifetime |
 | `STRIPE_*` | placeholders | set real test keys for live Stripe |
 | `SMTP_*` | localhost:1025 | Mailhog-friendly |
+| `CLOUDINARY_URL` | — | Preferred: `cloudinary://api_key:api_secret@cloud_name` for room-type image uploads |
+| `CLOUDINARY_CLOUD_NAME` / `API_KEY` / `API_SECRET` | — | Alternative to `CLOUDINARY_URL` |
 
 Copy `.env.example` → `.env`. Never commit `.env`.
 

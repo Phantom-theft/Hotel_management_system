@@ -4,6 +4,25 @@ const isoDateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-M
 const uuidLike = z.string().min(5);
 const optionalStringArray = z.array(z.string().min(1)).optional();
 
+/** Accept JSON arrays, JSON-string arrays (multipart), or comma-separated strings. */
+const formStringArray = z.preprocess((val) => {
+  if (val == null || val === '') return undefined;
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return undefined;
+    if (trimmed.startsWith('[')) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return trimmed;
+      }
+    }
+    return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  return val;
+}, optionalStringArray);
+
 export const idParamSchema = z.object({
   params: z.object({
     id: uuidLike,
@@ -33,26 +52,28 @@ export const emptyBodySchema = z.object({
 export const roomTypeCreateSchema = z.object({
   body: z.object({
     name: z.string().min(1),
-    basePrice: z.number().nonnegative(),
-    capacity: z.number().int().min(1),
-    amenities: optionalStringArray,
-    images: optionalStringArray,
+    basePrice: z.coerce.number().nonnegative(),
+    capacity: z.coerce.number().int().min(1),
+    amenities: formStringArray,
+    /** Pasted image URLs (JSON mode) or multipart field */
+    images: formStringArray,
+    /** Explicit multipart field for pasted URLs when files also use `images` */
+    imageUrls: formStringArray,
     description: z.string().optional(),
   }),
 });
 
 export const roomTypeUpdateSchema = z.object({
   params: z.object({ id: uuidLike }),
-  body: z
-    .object({
-      name: z.string().min(1).optional(),
-      basePrice: z.number().nonnegative().optional(),
-      capacity: z.number().int().min(1).optional(),
-      amenities: optionalStringArray,
-      images: optionalStringArray,
-      description: z.string().nullable().optional(),
-    })
-    .refine((v) => Object.keys(v).length > 0, 'At least one field is required'),
+  body: z.object({
+    name: z.string().min(1).optional(),
+    basePrice: z.coerce.number().nonnegative().optional(),
+    capacity: z.coerce.number().int().min(1).optional(),
+    amenities: formStringArray,
+    images: formStringArray,
+    imageUrls: formStringArray,
+    description: z.string().nullable().optional(),
+  }),
 });
 
 export const roomCreateSchema = z.object({

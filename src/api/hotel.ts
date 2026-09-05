@@ -166,10 +166,36 @@ export async function createRoomType(input: {
   basePrice: number
   capacity: number
   amenities?: string[]
+  /** Pasted / existing image URLs */
   images?: string[]
+  /** New files sent as multipart (Multer → Cloudinary on the server) */
+  imageFiles?: File[]
   description?: string
 }): Promise<{ roomType: RoomType }> {
-  const { data } = await api.post<{ roomType: RoomType }>('/room-types', input)
+  const { imageFiles, ...rest } = input
+  if (imageFiles?.length) {
+    const form = new FormData()
+    form.append('name', rest.name)
+    form.append('basePrice', String(rest.basePrice))
+    form.append('capacity', String(rest.capacity))
+    if (rest.description) form.append('description', rest.description)
+    if (rest.amenities?.length) form.append('amenities', JSON.stringify(rest.amenities))
+    if (rest.images?.length) form.append('imageUrls', JSON.stringify(rest.images))
+    for (const file of imageFiles) {
+      form.append('images', file)
+    }
+    const { data } = await api.post<{ roomType: RoomType }>('/room-types', form)
+    return data
+  }
+
+  const { data } = await api.post<{ roomType: RoomType }>('/room-types', {
+    name: rest.name,
+    basePrice: rest.basePrice,
+    capacity: rest.capacity,
+    amenities: rest.amenities,
+    images: rest.images,
+    description: rest.description,
+  })
   return data
 }
 
@@ -181,10 +207,29 @@ export async function updateRoomType(
     capacity: number
     amenities: string[]
     images: string[]
+    imageFiles: File[]
     description: string | null
   }>,
 ): Promise<{ roomType: RoomType }> {
-  const { data } = await api.patch<{ roomType: RoomType }>(`/room-types/${id}`, input)
+  const { imageFiles, ...rest } = input
+  if (imageFiles?.length) {
+    const form = new FormData()
+    if (rest.name != null) form.append('name', rest.name)
+    if (rest.basePrice != null) form.append('basePrice', String(rest.basePrice))
+    if (rest.capacity != null) form.append('capacity', String(rest.capacity))
+    if (rest.description !== undefined) {
+      form.append('description', rest.description ?? '')
+    }
+    if (rest.amenities) form.append('amenities', JSON.stringify(rest.amenities))
+    if (rest.images) form.append('imageUrls', JSON.stringify(rest.images))
+    for (const file of imageFiles) {
+      form.append('images', file)
+    }
+    const { data } = await api.patch<{ roomType: RoomType }>(`/room-types/${id}`, form)
+    return data
+  }
+
+  const { data } = await api.patch<{ roomType: RoomType }>(`/room-types/${id}`, rest)
   return data
 }
 

@@ -23,8 +23,10 @@ Auth styles:
 ## Room Types (Admin)
 - `GET /room-types`
 - `GET /room-types/:id`
-- `POST /room-types` Body: `{ name, basePrice, capacity, amenities?, images?, description? }`
-- `PATCH /room-types/:id` Body: partial above
+- `POST /room-types` (Admin)  
+  - JSON: `{ name, basePrice, capacity, amenities?, images?, description? }`  
+  - multipart/form-data: fields `name`, `basePrice`, `capacity`, `amenities?` (JSON array string), `imageUrls?` (JSON URL array), `description?`, plus file field `images` (jpg/png/webp, ≤5MB each). Files are uploaded to Cloudinary; resulting URLs are stored in `RoomType.images`.
+- `PATCH /room-types/:id` — same body shapes as create (partial)
 - `DELETE /room-types/:id`
 
 ## Rooms
