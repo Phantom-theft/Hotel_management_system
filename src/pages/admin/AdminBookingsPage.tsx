@@ -138,42 +138,61 @@ export function AdminBookingsPage() {
           value={String(checkOuts.length)}
           hint="Scheduled departures"
         />
-        <div className="flex flex-col justify-between rounded-xl border border-neutral-200/80 bg-white p-4 shadow-sm sm:col-span-2 lg:col-span-1">
+        <div className="flex flex-col justify-between rounded-xl border-2 border-primary bg-white p-4 shadow-sm transition hover:border-primary-light sm:col-span-2 lg:col-span-1">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Walk-in Desk</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">Walk-in Desk</p>
             <p className="mt-1 text-sm text-neutral-600">Register direct arrivals without online pre-booking.</p>
           </div>
           <button
             type="button"
-            onClick={() => setShowWalkIn((prev) => !prev)}
+            onClick={() => setShowWalkIn(true)}
             className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-light"
           >
-            {showWalkIn ? <X className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-            {showWalkIn ? 'Hide Walk-in Form' : 'New Walk-in Reservation'}
+            <UserPlus className="h-4 w-4" />
+            <span>New Walk-in Reservation</span>
           </button>
         </div>
       </div>
 
-      {/* Collapsible Walk-in Form */}
+      {/* Walk-in Reservation Modal */}
       {showWalkIn && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 transition-all shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-base font-bold text-primary">Create Walk-in Reservation</h3>
-            <button
-              type="button"
-              onClick={() => setShowWalkIn(false)}
-              className="text-xs text-neutral-500 hover:text-neutral-800"
-            >
-              Cancel
-            </button>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowWalkIn(false)
+          }}
+        >
+          <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl border border-neutral-200">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-neutral-900">
+                  New Walk-in Reservation
+                </h3>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  Register direct arrivals and create an instant confirmed booking.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWalkIn(false)}
+                className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <AdminWalkInForm
+                rooms={roomsQuery.data?.rooms ?? []}
+                onCreated={() => {
+                  setShowWalkIn(false)
+                  invalidateBookingQueries()
+                }}
+                onCancel={() => setShowWalkIn(false)}
+                inModal
+              />
+            </div>
           </div>
-          <AdminWalkInForm
-            rooms={roomsQuery.data?.rooms ?? []}
-            onCreated={() => {
-              setShowWalkIn(false)
-              invalidateBookingQueries()
-            }}
-          />
         </div>
       )}
 
