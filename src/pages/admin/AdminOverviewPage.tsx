@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   Area,
   AreaChart,
@@ -23,23 +23,19 @@ import {
   getCancellationsReport,
   getOccupancyReport,
   getRevenueReport,
-  getRoomTypeReviews,
   getTodaysBookings,
   listAllRooms,
-  listRoomTypes,
 } from '../../api/hotel'
 import { AdminBookingTable } from '../../components/admin/AdminBookingTable'
 import {
   AdminChartTooltip,
   BookingsByRoomTypeDonut,
-  OverallRatingsWidget,
   RoomOccupancyWidget,
 } from '../../components/admin/AdminDashboardCharts'
 import { AdminDashboardCard, AdminDashboardStatCard } from '../../components/admin/AdminDashboardCards'
 import { BookingListSkeleton } from '../../components/ui/Skeletons'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 import { previousPeriodChangeSuffix } from '../../utils/periodTrends'
-import { aggregateOverallReviews } from '../../utils/reviewAggregates'
 
 const CHART_PRIMARY = '#0F1B3D'
 const CHART_ACCENT = '#3B82F6'
@@ -79,27 +75,6 @@ export function AdminOverviewPage() {
   })
   const today = useQuery({ queryKey: ['bookings-today'], queryFn: getTodaysBookings })
   const roomsQuery = useQuery({ queryKey: ['rooms-admin-all'], queryFn: listAllRooms })
-  const roomTypesQuery = useQuery({ queryKey: ['room-types'], queryFn: listRoomTypes })
-  const roomTypes = roomTypesQuery.data?.roomTypes ?? []
-
-  const reviewQueries = useQueries({
-    queries: roomTypes.map((t) => ({
-      queryKey: ['roomtype-reviews', t.id],
-      queryFn: () => getRoomTypeReviews(t.id, 1, 1),
-      enabled: roomTypes.length > 0,
-    })),
-  })
-
-  const overallReviews = useMemo(
-    () =>
-      aggregateOverallReviews(
-        reviewQueries.map((q) => ({
-          total: q.data?.total ?? 0,
-          averageRating: q.data?.averageRating ?? 0,
-        })),
-      ),
-    [reviewQueries],
-  )
 
   const loading = occupancy.isLoading || revenue.isLoading || cancellations.isLoading
   const changeSuffix = previousPeriodChangeSuffix(from, to)
@@ -125,7 +100,6 @@ export function AdminOverviewPage() {
     return merged.slice(0, 8)
   }, [today.data])
 
-  const occupancyRate = occupancy.data?.overallOccupancyRate ?? 0
   const barData = revenue.data?.byRoomType ?? []
 
   return (
@@ -186,8 +160,8 @@ export function AdminOverviewPage() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
-        <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+      {/* Row 2: Revenue by room type | Occupancy trend | Room Occupancy */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.55fr)]">
           <AdminDashboardCard
             title="Revenue by room type"
             description={
@@ -300,45 +274,7 @@ export function AdminOverviewPage() {
               </ResponsiveContainer>
             </div>
           </AdminDashboardCard>
-        </div>
 
-        <AdminDashboardCard
-          title="Occupancy"
-          headerRight={
-            <Link
-              to="/admin/reports"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
-            >
-              View details
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            </Link>
-          }
-        >
-          <p className="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl">
-            {occupancy.data ? `${occupancyRate.toFixed(1)}%` : '—'}
-          </p>
-          <div className="mt-6">
-            <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
-              <div
-                className="h-full rounded-full bg-[#0F1B3D] transition-all duration-500"
-                style={{ width: `${Math.min(occupancyRate, 100)}%` }}
-              />
-            </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] font-medium text-neutral-400">
-              <span>0%</span>
-              <span>100%</span>
-            </div>
-            <div className="mt-3 flex items-center justify-between text-xs text-neutral-500">
-              <span>{roomStats.occupied} occupied rooms</span>
-              <span>{roomStats.available} available rooms</span>
-            </div>
-          </div>
-        </AdminDashboardCard>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.38fr)]">
-        {/* Right: compact Room Occupancy + Bookings donut */}
-        <div className="order-2 flex min-w-0 flex-col gap-4 xl:order-2 xl:row-span-1 xl:col-start-2">
           <AdminDashboardCard
             dense
             title="Room Occupancy"
@@ -361,62 +297,42 @@ export function AdminOverviewPage() {
               maintenance={roomStats.maintenance}
             />
           </AdminDashboardCard>
-
-          <AdminDashboardCard
-            dense
-            title="Bookings by Room Type"
-            description="Selected period share"
-          >
-            <BookingsByRoomTypeDonut compact items={revenue.data?.bookingsByRoomType ?? []} />
-          </AdminDashboardCard>
-        </div>
-
-        <div className="order-1 min-w-0 xl:col-start-1 xl:row-start-1">
-          <AdminDashboardCard
-            title="Overall Ratings"
-            description="Across all room types"
-            headerRight={
-              <Link
-                to="/admin/reviews"
-                className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
-              >
-                View reviews
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-              </Link>
-            }
-          >
-            <OverallRatingsWidget
-              avgRating={overallReviews.avgRating}
-              totalReviews={overallReviews.totalReviews}
-            />
-          </AdminDashboardCard>
-        </div>
       </div>
 
-      {/* Full-width bottom section */}
-      <AdminDashboardCard
-        title="Today's arrivals & departures"
-        description={
-          today.data
-            ? `${today.data.checkIns.length} arrivals • ${today.data.checkOuts.length} departures`
-            : undefined
-        }
-        headerRight={
-          <Link
-            to="/admin/bookings"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
-          >
-            View all bookings
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-          </Link>
-        }
-      >
-        {today.isLoading ? (
-          <BookingListSkeleton count={3} />
-        ) : (
-          <AdminBookingTable bookings={recentBookings} emptyMessage="No activity today." />
-        )}
-      </AdminDashboardCard>
+      {/* Row 3: Today's arrivals & departures (left) | Bookings by Room Type (right) */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.38fr)]">
+        <AdminDashboardCard
+          title="Today's arrivals & departures"
+          description={
+            today.data
+              ? `${today.data.checkIns.length} arrivals • ${today.data.checkOuts.length} departures`
+              : undefined
+          }
+          headerRight={
+            <Link
+              to="/admin/bookings"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#0F1B3D] transition hover:underline"
+            >
+              View all bookings
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </Link>
+          }
+        >
+          {today.isLoading ? (
+            <BookingListSkeleton count={3} />
+          ) : (
+            <AdminBookingTable bookings={recentBookings} emptyMessage="No activity today." />
+          )}
+        </AdminDashboardCard>
+
+        <AdminDashboardCard
+          dense
+          title="Bookings by Room Type"
+          description="Selected period share"
+        >
+          <BookingsByRoomTypeDonut compact items={revenue.data?.bookingsByRoomType ?? []} />
+        </AdminDashboardCard>
+      </div>
     </div>
   )
 }
