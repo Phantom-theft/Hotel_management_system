@@ -260,21 +260,21 @@ function RoomTypesSection({
                   <tr key={t.id} className="transition hover:bg-neutral-50/50">
                     {/* TYPE NAME */}
                     <td className="py-4 pr-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         {t.images && t.images[0] ? (
                           <img
                             src={t.images[0]}
                             alt={t.name}
-                            className="h-16 w-24 shrink-0 rounded-lg border border-neutral-200 object-cover shadow-2xs"
+                            className="h-28 w-44 sm:h-32 sm:w-52 shrink-0 rounded-xl border border-neutral-200 object-cover shadow-sm transition duration-200 hover:scale-[1.02]"
                           />
                         ) : (
-                          <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100 text-neutral-400 shadow-2xs">
-                            <BedDouble className="h-6 w-6" />
+                          <div className="flex h-28 w-44 sm:h-32 sm:w-52 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-400 shadow-sm">
+                            <BedDouble className="h-8 w-8" />
                           </div>
                         )}
-                        <div>
-                          <p className="font-bold text-neutral-900 text-sm">{t.name}</p>
-                          <p className="line-clamp-1 max-w-xs text-xs text-neutral-500">
+                        <div className="min-w-0">
+                          <p className="font-bold text-neutral-900 text-base">{t.name}</p>
+                          <p className="mt-1 line-clamp-2 max-w-sm text-xs text-neutral-500 leading-relaxed">
                             {t.description || 'Spacious and comfortable room with quality amenities.'}
                           </p>
                         </div>
