@@ -668,7 +668,7 @@ function RoomsInventorySection({
             className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-light"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>+ Add room</span>
+            <span>Add room</span>
           </button>
         </div>
       </div>

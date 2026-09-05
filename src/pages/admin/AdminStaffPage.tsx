@@ -104,7 +104,6 @@ export function AdminStaffPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h2 className="font-display text-2xl">Staff</h2>
         {staffQuery.isLoading && <BookingListSkeleton count={3} />}
         <div className="overflow-x-auto rounded-xl border border-neutral-100 bg-white shadow-card">
           <table className="min-w-full text-left text-sm">
