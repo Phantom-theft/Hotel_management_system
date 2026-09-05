@@ -100,7 +100,7 @@ export function AdminRoomsPage() {
       />
 
       {/* SECTION 2: Rooms inventory & matrix (Left) & Room status overview (Right) side-by-side */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_360px] items-start">
+      <div className="grid grid-cols-1 gap-6 lg:h-[512px] lg:grid-cols-[1fr_340px] lg:items-stretch xl:grid-cols-[1fr_360px]">
         <RoomsInventorySection
           rooms={rooms}
           types={types}
@@ -623,7 +623,7 @@ function RoomsInventorySection({
   }
 
   return (
-    <section className="rounded-xl border border-neutral-200/80 bg-white p-6 shadow-sm">
+    <section className="flex h-full min-h-0 flex-col rounded-xl border border-neutral-200/80 bg-white p-6 shadow-sm">
       {/* Header row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -748,15 +748,16 @@ function RoomsInventorySection({
         </div>
       </div>
 
-      {loading && (
-        <div className="mt-6">
-          <BookingListSkeleton count={3} />
-        </div>
-      )}
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        {loading && (
+          <div className="mt-6">
+            <BookingListSkeleton count={3} />
+          </div>
+        )}
 
-      {/* Main Content: Floor Plan Grid */}
-      {viewMode === 'grid' && !loading && (
-        <div className="mt-6 space-y-6">
+        {/* Main Content: Floor Plan Grid */}
+        {viewMode === 'grid' && !loading && (
+          <div className="mt-6 space-y-6">
           {Object.keys(roomsByFloor).length === 0 ? (
             <div className="rounded-xl border border-dashed border-neutral-200 p-8 text-center text-xs text-neutral-400">
               No rooms match the selected filters.
@@ -824,12 +825,12 @@ function RoomsInventorySection({
               </div>
             ))
           )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Table View */}
-      {viewMode === 'table' && !loading && (
-        <div className="mt-6 overflow-x-auto">
+        {/* Table View */}
+        {viewMode === 'table' && !loading && (
+          <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-neutral-100 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
               <tr>
@@ -888,8 +889,9 @@ function RoomsInventorySection({
               )}
             </tbody>
           </table>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </section>
   )
 }
@@ -1078,7 +1080,7 @@ function RoomStatusOverviewSection({ rooms }: { rooms: Room[] }) {
   const maintenancePercent = totalRooms > 0 ? Math.round((countMaintenance / totalRooms) * 100) : 0
 
   return (
-    <section className="rounded-xl border border-neutral-200/80 bg-white p-5 shadow-sm">
+    <section className="h-full rounded-xl border border-neutral-200/80 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-neutral-900">Room status overview</h2>
