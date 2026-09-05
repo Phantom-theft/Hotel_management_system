@@ -11,13 +11,13 @@ import type { UserRole } from '../../types/api'
 import { scrollToSection, scrollToTop } from '../../utils/scroll'
 
 const appRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `text-sm font-medium tracking-wide transition ${
-    isActive ? 'text-accent' : 'text-neutral-600 hover:text-primary'
+  `text-sm tracking-wide transition ${
+    isActive ? 'text-primary font-semibold' : 'text-neutral-600 hover:text-primary font-medium'
   }`
 
 const mobileAppRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `block py-2 text-sm font-medium tracking-wide transition ${
-    isActive ? 'text-accent' : 'text-neutral-700 hover:text-primary'
+  `block py-2 text-sm tracking-wide transition ${
+    isActive ? 'text-primary font-semibold' : 'text-neutral-700 hover:text-primary font-medium'
   }`
 
 function appNavLinksForRole(role: UserRole | undefined) {
@@ -126,30 +126,30 @@ export function Header() {
   }
 
   const desktopNavItemClass = (active: boolean) =>
-    `text-sm font-medium tracking-wide transition-colors duration-300 ${
+    `text-sm tracking-wide transition-colors duration-300 ${
       isTransparent
         ? active
           ? 'text-white font-semibold'
-          : 'text-white/80 hover:text-white'
+          : 'text-white/80 hover:text-white font-medium'
         : active
-          ? 'text-accent'
-          : 'text-neutral-600 hover:text-primary'
+          ? 'text-primary font-semibold'
+          : 'text-neutral-600 hover:text-primary font-medium'
     }`
 
   const desktopRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium tracking-wide transition-colors duration-300 ${
+    `text-sm tracking-wide transition-colors duration-300 ${
       isTransparent
         ? isActive
           ? 'text-white font-semibold'
-          : 'text-white/80 hover:text-white'
+          : 'text-white/80 hover:text-white font-medium'
         : isActive
-          ? 'text-accent'
-          : 'text-neutral-600 hover:text-primary'
+          ? 'text-primary font-semibold'
+          : 'text-neutral-600 hover:text-primary font-medium'
     }`
 
   const mobileNavItemClass = (active: boolean) =>
-    `block w-full py-2 text-left text-sm font-medium tracking-wide transition ${
-      active ? 'text-accent' : 'text-neutral-700 hover:text-primary'
+    `block w-full py-2 text-left text-sm tracking-wide transition ${
+      active ? 'text-primary font-semibold' : 'text-neutral-700 hover:text-primary font-medium'
     }`
 
   return (

@@ -106,7 +106,7 @@ export function LoginPageContent() {
         <button
           type="button"
           onClick={() => switchAuth('/register')}
-          className="font-semibold text-accent transition hover:text-primary hover:underline"
+          className="font-bold text-primary transition hover:underline"
         >
           Create one
         </button>
