@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
   Carousel,
@@ -43,6 +44,7 @@ export function Gallery4({
   items,
   className,
 }: Gallery4Props) {
+  const shouldReduceMotion = useReducedMotion()
   const [carouselApi, setCarouselApi] = useState<CarouselApi>()
   const [canScrollPrev, setCanScrollPrev] = useState(false)
   const [canScrollNext, setCanScrollNext] = useState(false)
@@ -66,7 +68,13 @@ export function Gallery4({
 
   return (
     <div className={cn(className)}>
-      <div className="mx-auto max-w-6xl px-4 text-center">
+      <motion.div
+        className="mx-auto max-w-6xl px-4 text-center"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.25 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">The Property</p>
         <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">
           {title}
@@ -92,9 +100,15 @@ export function Gallery4({
             <ArrowRight className="size-5" aria-hidden />
           </button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mx-auto mt-10 w-full max-w-6xl px-4">
+      <motion.div
+        className="mx-auto mt-10 w-full max-w-6xl px-4"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+      >
         <Carousel
           setApi={setCarouselApi}
           opts={{
@@ -144,7 +158,7 @@ export function Gallery4({
             />
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

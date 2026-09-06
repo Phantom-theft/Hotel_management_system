@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { HOTEL_CONTACT } from '../../constants/contact'
 import { LANDING_SECTIONS } from '../../constants/landing'
 import { toast } from '../../store/toastStore'
@@ -65,6 +66,7 @@ export function ContactSection() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
+  const shouldReduceMotion = useReducedMotion()
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -83,10 +85,14 @@ export function ContactSection() {
           description="Questions about a stay, a group booking, or accessibility? Send a note or reach the desk directly."
         />
         <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:items-stretch lg:gap-14">
-          <form
+          <motion.form
             onSubmit={onSubmit}
             className="flex h-full flex-col rounded-xl border border-neutral-100 bg-white p-6 shadow-card"
             aria-label="Send us a message"
+            initial={shouldReduceMotion ? false : { opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           >
             <h3 className="font-display text-lg font-bold text-primary">Send us a message</h3>
             <div className="mt-4 flex flex-1 flex-col gap-4">
@@ -127,12 +133,18 @@ export function ContactSection() {
                 Send message
               </button>
             </div>
-          </form>
+          </motion.form>
 
-          <div className="flex h-full flex-col gap-6">
+          <motion.div
+            className="flex h-full flex-col gap-6"
+            initial={shouldReduceMotion ? false : { opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          >
             <ContactMap />
             <ContactDetailsList />
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
