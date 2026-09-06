@@ -68,6 +68,16 @@ export function Header() {
   }, [location.pathname])
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
     if (!isHome) return
 
     const handleScroll = () => {
@@ -216,7 +226,7 @@ export function Header() {
 
         <div className="flex items-center gap-2 sm:gap-3">
           {!isAuthenticated ? (
-            showMarketingNav && (
+            showMarketingNav && !mobileOpen && (
               <button
                 type="button"
                 onClick={() => openAuth('/login')}
@@ -234,17 +244,19 @@ export function Header() {
               >
                 {user?.name}
               </span>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={`hidden rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-300 sm:inline-flex ${
-                  isTransparent
-                    ? 'border-white/30 text-white hover:bg-white/10'
-                    : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
-                }`}
-              >
-                Sign out
-              </button>
+              {!mobileOpen && (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={`hidden rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-300 sm:inline-flex ${
+                    isTransparent
+                      ? 'border-white/30 text-white hover:bg-white/10'
+                      : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+                  }`}
+                >
+                  Sign out
+                </button>
+              )}
             </>
           )}
 
