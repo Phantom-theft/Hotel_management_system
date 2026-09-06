@@ -45,13 +45,13 @@ export function AuthSlidePanel({
   const instantTransition = shouldReduceMotion
 
   const desktopVariants = {
-    closed: { width: '0%' },
-    open: { width: '50%' },
+    closed: { width: '0%', y: '0%' },
+    open: { width: '50%', y: '0%' },
   }
 
   const mobileVariants = {
-    closed: { y: '100%' },
-    open: { y: '0%' },
+    closed: { width: '100%', y: '100%' },
+    open: { width: '100%', y: '0%' },
   }
 
   const variants = isLg ? desktopVariants : mobileVariants
@@ -73,7 +73,7 @@ export function AuthSlidePanel({
 
   return (
     <motion.div
-      className="fixed z-[60] overflow-hidden bg-white shadow-2xl shadow-black/20 max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-0 max-lg:h-[100dvh] lg:right-0 lg:top-0 lg:h-dvh lg:border-l lg:border-neutral-200/80"
+      className="fixed right-0 top-0 bottom-0 z-[60] h-[100dvh] overflow-hidden bg-white shadow-2xl shadow-black/20 lg:h-dvh lg:border-l lg:border-neutral-200/80"
       initial={shouldReduceMotion || skipEnterAnimation ? 'open' : 'closed'}
       animate={isOpen ? 'open' : 'closed'}
       variants={variants}
@@ -86,7 +86,7 @@ export function AuthSlidePanel({
         if (definition === 'closed' && !isOpen) onExitComplete?.()
       }}
     >
-      <div className="relative flex h-full w-screen flex-col overflow-y-auto bg-white lg:w-[50vw] lg:min-w-[50vw]">
+      <div className="relative flex h-full w-full flex-col overflow-y-auto bg-white lg:w-[50vw] lg:min-w-[50vw]">
         <div className="absolute right-4 top-4 z-30 sm:right-6 sm:top-6">
           <button
             type="button"
