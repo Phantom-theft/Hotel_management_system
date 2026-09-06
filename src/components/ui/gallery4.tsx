@@ -18,7 +18,7 @@ export interface Gallery4Props {
 }
 
 const navButtonClass =
-  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-primary shadow-sm transition hover:bg-neutral-50 disabled:pointer-events-auto disabled:opacity-40'
+  'inline-flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white text-primary shadow-sm transition hover:bg-neutral-50 active:scale-95 disabled:pointer-events-auto disabled:opacity-40'
 
 function GallerySlideMedia({ item }: { item: GalleryItem }) {
   const sharedClass =
@@ -123,15 +123,15 @@ export function Gallery4({
             {items.map((item) => (
               <CarouselItem
                 key={item.id}
-                className="basis-[85%] pl-4 sm:basis-[70%] md:basis-[55%] lg:basis-[45%] xl:basis-[38%]"
+                className="basis-[88%] pl-3 sm:basis-[70%] sm:pl-4 md:basis-[55%] lg:basis-[45%] xl:basis-[38%]"
               >
                 <article className="group h-full rounded-xl">
-                  <div className="relative h-full min-h-[27rem] max-w-full overflow-hidden rounded-xl shadow-card md:aspect-[5/4] lg:aspect-[16/9]">
+                  <div className="relative h-full min-h-[20rem] sm:min-h-[24rem] md:min-h-0 md:aspect-[5/4] lg:aspect-[16/9] max-w-full overflow-hidden rounded-xl shadow-card">
                     <GallerySlideMedia item={item} />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/35 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-6 text-white md:p-8">
-                      <h3 className="font-display text-xl font-bold md:text-2xl">{item.title}</h3>
-                      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-200 md:line-clamp-2">
+                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-5 sm:p-6 text-white md:p-8">
+                      <h3 className="font-display text-lg sm:text-xl font-bold md:text-2xl">{item.title}</h3>
+                      <p className="mt-1.5 sm:mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-200 md:line-clamp-2">
                         {item.description}
                       </p>
                     </div>
@@ -142,7 +142,7 @@ export function Gallery4({
           </CarouselContent>
         </Carousel>
 
-        <div className="mt-8 flex justify-center gap-2" role="tablist" aria-label="Gallery slides">
+        <div className="mt-6 sm:mt-8 flex justify-center gap-1 sm:gap-1.5" role="tablist" aria-label="Gallery slides">
           {items.map((item, index) => (
             <button
               key={item.id}
@@ -150,12 +150,16 @@ export function Gallery4({
               role="tab"
               aria-selected={currentSlide === index}
               aria-label={`Go to ${item.title}`}
-              className={cn(
-                'h-2 w-2 rounded-full transition-colors',
-                currentSlide === index ? 'bg-primary' : 'bg-primary/20',
-              )}
+              className="flex h-9 w-9 items-center justify-center p-1"
               onClick={() => carouselApi?.scrollTo(index)}
-            />
+            >
+              <span
+                className={cn(
+                  'h-2 rounded-full transition-all duration-300',
+                  currentSlide === index ? 'w-6 bg-primary' : 'w-2 bg-primary/25 hover:bg-primary/50',
+                )}
+              />
+            </button>
           ))}
         </div>
       </motion.div>

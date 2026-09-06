@@ -91,7 +91,7 @@ export function AuthSlidePanel({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white/80 text-neutral-600 backdrop-blur-sm transition-all hover:bg-neutral-100 hover:text-primary hover:shadow-sm"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white/90 text-neutral-600 backdrop-blur-sm transition-all hover:bg-neutral-100 hover:text-primary hover:shadow-sm active:scale-95"
             aria-label="Close and return to home"
           >
             <svg
@@ -112,12 +112,12 @@ export function AuthSlidePanel({
           </button>
         </div>
 
-        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 sm:px-10 lg:px-16 xl:px-24">
+        <div className="flex min-h-full flex-1 flex-col justify-center px-5 py-10 sm:px-10 sm:py-12 lg:px-16 xl:px-24">
           <div className="mx-auto w-full max-w-md">
             <button
               type="button"
               onClick={onClose}
-              className="mb-8 inline-block font-display text-xl font-extrabold tracking-tight text-primary lg:hidden"
+              className="mb-6 inline-block font-display text-xl font-extrabold tracking-tight text-primary lg:hidden"
             >
               Harborlight
             </button>

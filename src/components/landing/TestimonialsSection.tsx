@@ -34,7 +34,7 @@ export function TestimonialsSection() {
   return (
     <section
       id={LANDING_SECTIONS.testimonials}
-      className="scroll-mt-20 bg-surface-tint py-16 sm:py-20"
+      className="scroll-mt-20 bg-surface-tint py-12 sm:py-16 lg:py-20"
     >
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeading
@@ -43,7 +43,7 @@ export function TestimonialsSection() {
           description="Placeholder testimonials for this portfolio demo — written for illustration, not pulled from live bookings."
         />
         <motion.div
-          className="mt-12 grid gap-6 md:grid-cols-3"
+          className="mt-8 grid gap-4 sm:mt-12 sm:gap-6 md:grid-cols-3"
           initial={shouldReduceMotion ? false : 'hidden'}
           whileInView="visible"
           viewport={{ once: true, amount: 0.15 }}
@@ -55,7 +55,7 @@ export function TestimonialsSection() {
           {testimonials.map((item) => (
             <motion.blockquote
               key={item.name}
-              className="flex h-full flex-col rounded-xl border border-neutral-100 bg-white p-6 shadow-card transition-shadow hover:shadow-md"
+              className="flex h-full flex-col rounded-xl border border-neutral-100 bg-white p-5 sm:p-6 shadow-card transition-shadow hover:shadow-md"
               variants={{
                 hidden: { opacity: 0, y: 24 },
                 visible: {

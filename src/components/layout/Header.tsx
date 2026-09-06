@@ -16,8 +16,8 @@ const appRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 const mobileAppRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `block py-2 text-sm tracking-wide transition ${
-    isActive ? 'text-primary font-semibold' : 'text-neutral-700 hover:text-primary font-medium'
+  `flex min-h-[44px] w-full items-center px-3 py-2.5 text-sm tracking-wide rounded-lg transition ${
+    isActive ? 'text-primary font-semibold bg-neutral-100/70' : 'text-neutral-700 hover:text-primary hover:bg-neutral-50 font-medium'
   }`
 
 function appNavLinksForRole(role: UserRole | undefined) {
@@ -158,8 +158,10 @@ export function Header() {
     }`
 
   const mobileNavItemClass = (active: boolean) =>
-    `block w-full py-2 text-left text-sm tracking-wide transition ${
-      active ? 'text-primary font-semibold' : 'text-neutral-700 hover:text-primary font-medium'
+    `flex min-h-[44px] w-full items-center px-3 py-2.5 text-left text-sm tracking-wide rounded-lg transition ${
+      active
+        ? 'text-primary font-semibold bg-neutral-100/70'
+        : 'text-neutral-700 hover:text-primary hover:bg-neutral-50 font-medium'
     }`
 
   return (
@@ -262,7 +264,7 @@ export function Header() {
 
           <button
             type="button"
-            className={`inline-flex items-center justify-center rounded-lg border p-2 transition-colors duration-300 lg:hidden ${
+            className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border p-2.5 transition-colors duration-300 lg:hidden ${
               isTransparent
                 ? 'border-white/30 text-white hover:bg-white/10'
                 : 'border-neutral-200 text-primary hover:bg-neutral-50'
@@ -329,27 +331,39 @@ export function Header() {
           <div className="mt-4 flex flex-col gap-2 border-t border-neutral-100 pt-4">
             {!isAuthenticated ? (
               showMarketingNav && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeMobile()
-                    openAuth('/login')
-                  }}
-                  className={mobileNavItemClass(location.pathname === '/login')}
-                >
-                  Sign in
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMobile()
+                      openAuth('/login')
+                    }}
+                    className={mobileNavItemClass(location.pathname === '/login')}
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMobile()
+                      openAuth('/register')
+                    }}
+                    className="flex min-h-[44px] w-full items-center justify-center rounded-full bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-light active:scale-[0.99]"
+                  >
+                    Create account
+                  </button>
+                </>
               )
             ) : (
               <>
-                <p className="px-0 py-1 text-sm text-neutral-500">{user?.name}</p>
+                <p className="px-3 py-1 text-sm text-neutral-500">{user?.name}</p>
                 <button
                   type="button"
                   onClick={() => {
                     closeMobile()
                     void handleLogout()
                   }}
-                  className="py-2 text-left text-sm font-medium text-neutral-700 hover:text-primary"
+                  className="flex min-h-[44px] w-full items-center px-3 py-2 text-left text-sm font-medium text-neutral-700 hover:text-primary hover:bg-neutral-50 rounded-lg transition"
                 >
                   Sign out
                 </button>

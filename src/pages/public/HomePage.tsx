@@ -45,11 +45,11 @@ export function HomePage() {
   useLandingHashScroll()
 
   return (
-    <div className="relative left-1/2 -mt-8 w-screen max-w-[100vw] -translate-x-1/2">
+    <div className="relative left-1/2 -mt-8 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-clip">
       {/* Hero — shared fixed backdrop renders behind; content only here */}
       <section id="hero" className="relative min-h-[100dvh] overflow-hidden">
         <motion.div
-          className="relative z-10 mx-auto flex min-h-[100dvh] max-w-6xl flex-col justify-end px-4 pb-16 pt-24 sm:pb-20 sm:pt-28"
+          className="relative z-10 mx-auto flex min-h-[100dvh] max-w-6xl flex-col justify-end px-4 pb-14 pt-24 sm:pb-20 sm:pt-28"
           initial={shouldReduceMotion ? false : 'hidden'}
           animate="visible"
           variants={{
@@ -63,7 +63,7 @@ export function HomePage() {
           }}
         >
           <motion.p
-            className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70"
+            className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-white/70"
             variants={{
               hidden: { opacity: 0, y: 15 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
@@ -72,7 +72,7 @@ export function HomePage() {
             Harborlight Hotel
           </motion.p>
           <motion.h1
-            className="mt-3 max-w-2xl font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="mt-2.5 sm:mt-3 max-w-2xl font-display text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-5xl lg:text-6xl"
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
@@ -82,7 +82,7 @@ export function HomePage() {
             <span className="font-accent text-[1.05em] font-medium text-white">stay</span>
           </motion.h1>
           <motion.p
-            className="mt-4 max-w-lg text-base leading-relaxed text-neutral-200 sm:text-lg"
+            className="mt-3.5 sm:mt-4 max-w-lg text-sm leading-relaxed text-neutral-200 sm:text-base lg:text-lg"
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
@@ -93,7 +93,7 @@ export function HomePage() {
           </motion.p>
           {!isAuthenticated && (
             <motion.div
-              className="mt-8"
+              className="mt-7 sm:mt-8"
               variants={{
                 hidden: { opacity: 0, y: 15 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
@@ -102,7 +102,7 @@ export function HomePage() {
               <button
                 type="button"
                 onClick={() => openAuth('/register')}
-                className="inline-flex rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-neutral-100"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-white px-6 sm:px-7 py-3 text-sm font-semibold text-primary shadow-sm transition hover:bg-neutral-100 active:scale-[0.98]"
               >
                 Create account
               </button>
@@ -112,9 +112,9 @@ export function HomePage() {
       </section>
 
       {/* Trust badges */}
-      <section className="border-b border-neutral-100 bg-white py-10">
+      <section className="border-b border-neutral-100 bg-white py-8 sm:py-10">
         <motion.div
-          className="mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-3"
+          className="mx-auto grid max-w-6xl gap-4 px-4 sm:grid-cols-3 sm:gap-6"
           initial={shouldReduceMotion ? false : 'hidden'}
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -126,7 +126,7 @@ export function HomePage() {
           {trustItems.map((item) => (
             <motion.div
               key={item.label}
-              className="flex items-center justify-center gap-3"
+              className="flex items-center justify-center gap-3 py-1"
               variants={{
                 hidden: { opacity: 0, y: 18 },
                 visible: {
@@ -149,7 +149,7 @@ export function HomePage() {
       </section>
 
       {/* Why choose us */}
-      <section className="bg-neutral-50 py-16 sm:py-20">
+      <section className="bg-neutral-50 py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-6xl px-4">
           <SectionHeading
             eyebrow="Why choose us"
@@ -157,7 +157,7 @@ export function HomePage() {
             description="Everything you need to find a room, hold a rate, and check in with confidence."
           />
           <motion.div
-            className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
             initial={shouldReduceMotion ? false : 'hidden'}
             whileInView="visible"
             viewport={{ once: true, amount: 0.15 }}
@@ -178,7 +178,7 @@ export function HomePage() {
                   },
                 }}
                 whileHover={shouldReduceMotion ? undefined : { y: -4, transition: { duration: 0.2 } }}
-                className="rounded-xl border border-neutral-100 bg-white p-6 shadow-card transition-shadow hover:shadow-md"
+                className="rounded-xl border border-neutral-100 bg-white p-5 sm:p-6 shadow-card transition-shadow hover:shadow-md"
               >
                 <span
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-tint text-lg text-accent"
@@ -186,7 +186,7 @@ export function HomePage() {
                 >
                   {item.icon}
                 </span>
-                <h3 className="mt-4 font-display text-lg font-bold text-primary">{item.title}</h3>
+                <h3 className="mt-4 font-display text-base sm:text-lg font-bold text-primary">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600">{item.body}</p>
               </motion.div>
             ))}

@@ -7,12 +7,12 @@ export function AboutSection() {
   const shouldReduceMotion = useReducedMotion()
 
   return (
-    <section id={LANDING_SECTIONS.about} className="scroll-mt-20 bg-white py-16 sm:py-20">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2 lg:gap-14">
+    <section id={LANDING_SECTIONS.about} className="scroll-mt-20 bg-white py-12 sm:py-16 lg:py-20">
+      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:gap-10 lg:grid-cols-2 lg:gap-14">
         <motion.img
           src={ourStoryImage}
           alt="Harborlight Hotel — our story"
-          className="min-h-[280px] w-full rounded-xl object-cover shadow-card sm:min-h-[360px] lg:min-h-[420px]"
+          className="h-64 w-full rounded-xl object-cover shadow-card sm:h-80 lg:h-[420px]"
           initial={shouldReduceMotion ? false : { opacity: 0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.25 }}
@@ -29,7 +29,7 @@ export function AboutSection() {
             eyebrow="Our Story"
             title="A single address, a steadier way to stay"
           />
-          <div className="mt-6 space-y-4 text-sm leading-relaxed text-neutral-600 sm:text-base">
+          <div className="mt-5 space-y-3.5 text-sm leading-relaxed text-neutral-600 sm:mt-6 sm:space-y-4 sm:text-base">
             <p>
               Harborlight opened with a simple premise: one boutique property, one team, and rates
               you can read without a magnifying glass. We are not a chain — we are a neighborhood

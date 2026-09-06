@@ -59,7 +59,7 @@ export function AmenitiesSection() {
   const shouldReduceMotion = useReducedMotion()
 
   return (
-    <section id={LANDING_SECTIONS.amenities} className="scroll-mt-20 bg-white py-16 sm:py-20">
+    <section id={LANDING_SECTIONS.amenities} className="scroll-mt-20 bg-white py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <SectionHeading
           eyebrow="What's Included"
@@ -67,7 +67,7 @@ export function AmenitiesSection() {
           description="Thoughtful amenities for a calm boutique stay included in your rate, not hidden behind upsells."
         />
         <motion.div
-          className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+          className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
           initial={shouldReduceMotion ? false : 'hidden'}
           whileInView="visible"
           viewport={{ once: true, amount: 0.15 }}
@@ -90,12 +90,12 @@ export function AmenitiesSection() {
                   },
                 }}
                 whileHover={shouldReduceMotion ? undefined : { y: -4, transition: { duration: 0.2 } }}
-                className="rounded-xl border border-neutral-100 bg-white p-6 shadow-card transition-shadow hover:shadow-md"
+                className="rounded-xl border border-neutral-100 bg-white p-5 sm:p-6 shadow-card transition-shadow hover:shadow-md"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-tint text-accent">
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
-                <h3 className="mt-4 font-display text-lg font-bold text-primary">{item.title}</h3>
+                <h3 className="mt-4 font-display text-base sm:text-lg font-bold text-primary">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600">{item.description}</p>
               </motion.div>
             )
