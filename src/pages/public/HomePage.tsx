@@ -85,7 +85,7 @@ export function HomePage() {
       <section className="border-b border-neutral-100 bg-white py-10">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-3">
           {trustItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-3 justify-center sm:justify-start">
+            <div key={item.label} className="flex items-center justify-center gap-3">
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-tint text-accent"
                 aria-hidden
