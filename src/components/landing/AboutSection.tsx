@@ -20,7 +20,7 @@ export function AboutSection() {
           <div className="mt-6 space-y-4 text-sm leading-relaxed text-neutral-600 sm:text-base">
             <p>
               Harborlight opened with a simple premise: one boutique property, one team, and rates
-              you can read without a magnifying glass. We are not a chain — we are a neighborhood
+              you can read without a magnifying glass. We are not a chain we are a neighborhood
               hotel built for travelers who want calm rooms and a front desk that remembers your
               name.
             </p>

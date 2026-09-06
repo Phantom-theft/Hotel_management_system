@@ -20,7 +20,7 @@ const testimonials = [
   },
   {
     quote:
-      'Harborlight feels like a place that knows what it is — a single property with real people behind the counter. Breakfast was simple and good; the pool was empty at dawn.',
+      'Harborlight feels like a place that knows what it is a single property with real people behind the counter. Breakfast was simple and good; the pool was empty at dawn.',
     rating: 4,
     name: 'Priya K.',
     city: 'Austin, TX',
@@ -37,7 +37,7 @@ export function TestimonialsSection() {
         <SectionHeading
           eyebrow="Guest Voices"
           title="What travelers say about Harborlight"
-          description="Placeholder testimonials for this portfolio demo — written for illustration, not pulled from live bookings."
+          description="Placeholder testimonials for this portfolio demo written for illustration, not pulled from live bookings."
         />
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {testimonials.map((item) => (

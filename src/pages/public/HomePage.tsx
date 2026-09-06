@@ -64,7 +64,7 @@ export function HomePage() {
             <span className="font-accent text-[1.05em] font-medium text-white">stay</span>
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-neutral-200 sm:text-lg">
-            Calm rooms, transparent rates, and a booking flow built for a single property — reserve
+            Calm rooms, transparent rates, and a booking flow built for a single property reserve
             in minutes.
           </p>
           {!isAuthenticated && (

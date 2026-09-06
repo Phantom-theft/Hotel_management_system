@@ -35,7 +35,7 @@ const amenities = [
   {
     icon: Headset,
     title: '24/7 Front Desk',
-    description: 'A real team on property — not a call center — any hour of the day.',
+    description: 'A real team on property not a call center any hour of the day.',
   },
   {
     icon: PawPrint,
@@ -61,7 +61,7 @@ export function AmenitiesSection() {
         <SectionHeading
           eyebrow="What's Included"
           title="Every stay, fully equipped"
-          description="Thoughtful amenities for a calm boutique stay — included in your rate, not hidden behind upsells."
+          description="Thoughtful amenities for a calm boutique stay included in your rate, not hidden behind upsells."
         />
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {amenities.map((item) => {
