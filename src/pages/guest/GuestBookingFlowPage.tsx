@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Elements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
@@ -18,6 +18,8 @@ import {
   msUntil,
   nightsBetween,
 } from '../../utils/bookingFormat'
+import { GUEST_ROOMS_LIST_PATH, guestRoomDetailPath } from '../../utils/guest/guestRoomsPaths'
+import { STAFF_ROOMS_LIST_PATH, staffRoomDetailPath } from '../../utils/staff/staffRoomsPaths'
 import type { Booking } from '../../types/api'
 
 type Step = 'guests' | 'review' | 'pay' | 'done'
@@ -26,9 +28,19 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? 
 
 export function GuestBookingFlowPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [params] = useSearchParams()
   const user = useAuthStore((s) => s.user)
   const { draft, setDraft, patchDraft, bookingId, setBookingId, clear } = useBookingFlowStore()
+
+  /** Staff booking stays inside the staff dashboard shell (sidebar + top bar). */
+  const isStaffFlow = location.pathname.startsWith('/staff/')
+  const roomsListPath = isStaffFlow ? STAFF_ROOMS_LIST_PATH : GUEST_ROOMS_LIST_PATH
+  const roomDetailHref = (id: string, qs: string) =>
+    isStaffFlow ? staffRoomDetailPath(id, qs) : guestRoomDetailPath(id, qs)
+  const donePrimaryHref = isStaffFlow ? '/staff' : null
+  const doneSecondaryHref = isStaffFlow ? STAFF_ROOMS_LIST_PATH : '/my-bookings'
+  const doneSecondaryLabel = isStaffFlow ? 'Back to rooms' : 'My bookings'
 
   const roomId = params.get('roomId') ?? draft?.roomId ?? ''
   const checkIn = params.get('checkIn') ?? draft?.checkIn ?? ''
@@ -88,12 +100,12 @@ export function GuestBookingFlowPage() {
     if (isBookingExpired(booking.expiresAt)) {
       toast('Your booking hold expired. Please search again.', 'error')
       clear()
-      navigate('/rooms')
+      navigate(roomsListPath)
     }
-  }, [booking, remainingMs, clear, navigate])
+  }, [booking, remainingMs, clear, navigate, roomsListPath])
 
   if (!roomId || !checkIn || !checkOut) {
-    return <Navigate to="/rooms" replace />
+    return <Navigate to={roomsListPath} replace />
   }
 
   const room = roomQuery.data ?? draft?.roomSnapshot
@@ -167,7 +179,7 @@ export function GuestBookingFlowPage() {
           }
           if (latest.status === 'cancelled') {
             toast('Payment failed or hold was cancelled. Please try again.', 'error')
-            navigate('/rooms')
+            navigate(roomsListPath)
             return
           }
         }
@@ -199,10 +211,18 @@ export function GuestBookingFlowPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <Link to={`/rooms/${roomId}?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestsCount}`} className="text-sm text-accent hover:underline">
+        <Link
+          to={roomDetailHref(
+            roomId,
+            `checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestsCount}`,
+          )}
+          className="text-sm text-accent hover:underline"
+        >
           ← Back to room
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-neutral-900">Complete your booking</h1>
+        <h1 className="mt-2 font-display text-3xl text-neutral-900">
+          {isStaffFlow ? 'Complete guest booking' : 'Complete your booking'}
+        </h1>
         <p className="mt-1 text-neutral-600">
           {roomType?.name ?? 'Room'} · {formatStay(checkIn, checkOut)}
         </p>
@@ -375,7 +395,7 @@ export function GuestBookingFlowPage() {
               onExpired={() => {
                 toast('Your booking hold expired. Please search again.', 'error')
                 clear()
-                navigate('/rooms')
+                navigate(roomsListPath)
               }}
             />
           ) : (
@@ -426,19 +446,29 @@ export function GuestBookingFlowPage() {
           </dl>
 
           <div className="flex flex-wrap gap-2">
+            {isStaffFlow ? (
+              <Link
+                to={donePrimaryHref!}
+                className="rounded-full bg-primary px-4 py-2 text-sm text-white hover:bg-primary-light"
+                onClick={() => clear()}
+              >
+                Back to desk
+              </Link>
+            ) : (
+              <Link
+                to={`/my-bookings/${booking.id}`}
+                className="rounded-full bg-primary px-4 py-2 text-sm text-white hover:bg-primary-light"
+                onClick={() => clear()}
+              >
+                View booking
+              </Link>
+            )}
             <Link
-              to={`/my-bookings/${booking.id}`}
-              className="rounded-full bg-primary px-4 py-2 text-sm text-white hover:bg-primary-light"
-              onClick={() => clear()}
-            >
-              View booking
-            </Link>
-            <Link
-              to="/my-bookings"
+              to={doneSecondaryHref}
               className="rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-700"
               onClick={() => clear()}
             >
-              My bookings
+              {doneSecondaryLabel}
             </Link>
           </div>
         </div>

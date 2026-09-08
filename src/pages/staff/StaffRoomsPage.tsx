@@ -6,39 +6,58 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { RoomGridSkeleton } from '../../components/ui/Skeletons'
 import { useStaffRoomSearch } from '../../hooks/staff/useStaffRoomSearch'
 
+/** Local calendar date as YYYY-MM-DD (avoids UTC day-shift issues). */
+function toLocalDateISO(date: Date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 function defaultCheckIn() {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().slice(0, 10)
+  return toLocalDateISO(new Date())
 }
 
 function defaultCheckOut() {
   const d = new Date()
-  d.setDate(d.getDate() + 3)
-  return d.toISOString().slice(0, 10)
+  d.setDate(d.getDate() + 1)
+  return toLocalDateISO(d)
 }
 
 export function StaffRoomsPage() {
   const [params, setParams] = useSearchParams()
-  const [checkIn, setCheckIn] = useState(params.get('checkIn') ?? defaultCheckIn())
-  const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? defaultCheckOut())
-  const [guests, setGuests] = useState(Number(params.get('guests') ?? 2))
-  const [type, setType] = useState(params.get('type') ?? '')
-  const [submitted, setSubmitted] = useState(() => !!params.get('checkIn'))
+
+  const initialCheckIn = params.get('checkIn') ?? defaultCheckIn()
+  const initialCheckOut = params.get('checkOut') ?? defaultCheckOut()
+  const initialGuests = Number(params.get('guests') ?? 1)
+  const initialType = params.get('type') ?? ''
+
+  // Form draft (editable before Search)
+  const [checkIn, setCheckIn] = useState(initialCheckIn)
+  const [checkOut, setCheckOut] = useState(initialCheckOut)
+  const [guests, setGuests] = useState(initialGuests)
+  const [type, setType] = useState(initialType)
+
+  // Applied query — starts with today's stay so results load immediately
+  const [applied, setApplied] = useState({
+    checkIn: initialCheckIn,
+    checkOut: initialCheckOut,
+    guests: initialGuests,
+    type: initialType,
+  })
 
   const filters = useMemo(
     () => ({
-      checkIn,
-      checkOut,
-      guests,
-      type: type || undefined,
-      enabled: submitted,
+      checkIn: applied.checkIn,
+      checkOut: applied.checkOut,
+      guests: applied.guests,
+      type: applied.type || undefined,
+      enabled: true,
     }),
-    [checkIn, checkOut, guests, type, submitted],
+    [applied],
   )
 
-  const { data, isLoading, isError, error, roomTypes, refetch, isFetching } =
-    useStaffRoomSearch(filters)
+  const { data, isLoading, isError, error, roomTypes, isFetching } = useStaffRoomSearch(filters)
 
   function onSearch(e: FormEvent) {
     e.preventDefault()
@@ -48,15 +67,14 @@ export function StaffRoomsPage() {
     next.set('guests', String(guests))
     if (type) next.set('type', type)
     setParams(next)
-    setSubmitted(true)
-    void refetch()
+    setApplied({ checkIn, checkOut, guests, type })
   }
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-neutral-600">
-        Search by dates, guests, and room type. Results exclude overlapping reservations and
-        maintenance rooms.
+        Showing rooms available for today by default. Adjust dates, guests, or room type and search
+        again to refine. Results exclude overlapping reservations and maintenance rooms.
       </p>
 
       <form
@@ -122,24 +140,9 @@ export function StaffRoomsPage() {
         </div>
       </form>
 
-      {!submitted && (
-        <EmptyState
-          title="Start your search"
-          description="Pick check-in and check-out dates, then search to see rooms available for your stay."
-          icon={
-            <span
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-tint text-2xl text-accent"
-              aria-hidden
-            >
-              ⌕
-            </span>
-          }
-        />
-      )}
+      {isLoading && <RoomGridSkeleton />}
 
-      {submitted && isLoading && <RoomGridSkeleton />}
-
-      {submitted && isError && (
+      {isError && (
         <p
           className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
           role="alert"
@@ -149,10 +152,14 @@ export function StaffRoomsPage() {
         </p>
       )}
 
-      {submitted && !isLoading && data && (
+      {!isLoading && data && (
         <>
           <p className="text-sm font-medium text-neutral-500">
             {data.rooms.length} room{data.rooms.length === 1 ? '' : 's'} available
+            <span className="font-normal text-neutral-400">
+              {' '}
+              · {applied.checkIn} → {applied.checkOut}
+            </span>
           </p>
           {data.rooms.length === 0 ? (
             <EmptyState
@@ -162,14 +169,14 @@ export function StaffRoomsPage() {
               onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             />
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {data.rooms.map((room: Room) => (
                 <StaffRoomCard
                   key={room.id}
                   room={room}
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  guests={guests}
+                  checkIn={applied.checkIn}
+                  checkOut={applied.checkOut}
+                  guests={applied.guests}
                 />
               ))}
             </div>

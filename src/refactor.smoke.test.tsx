@@ -159,6 +159,7 @@ describe('refactor smoke — pages mount', () => {
     render(wrap(<StaffRoomsPage />, staffUser))
     expect(screen.getByRole('form', { name: /search rooms/i })).toBeInTheDocument()
     expect(screen.queryByText(/find a room/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/start your search/i)).not.toBeInTheDocument()
   })
 
   it('StaffDashboardPage renders desk sections', async () => {

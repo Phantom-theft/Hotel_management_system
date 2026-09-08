@@ -43,6 +43,7 @@ function AppRoutes() {
             <Route path="staff" element={<StaffDashboardPage />} />
             <Route path="staff/rooms" element={<StaffRoomsPage />} />
             <Route path="staff/rooms/:id" element={<StaffRoomDetailPage />} />
+            <Route path="staff/book" element={<GuestBookingFlowPage />} />
           </Route>
         </Route>
 

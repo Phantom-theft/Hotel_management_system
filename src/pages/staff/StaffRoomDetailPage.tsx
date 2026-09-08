@@ -7,7 +7,7 @@ import { RatingBadge, StarRating } from '../../components/ui/StarRating'
 import { useStaffRoomAvailability } from '../../hooks/staff/useStaffRoomAvailability'
 import { useAuthStore } from '../../store/authStore'
 import { useBookingFlowStore } from '../../store/bookingFlowStore'
-import { STAFF_ROOMS_LIST_PATH } from '../../utils/staff/staffRoomsPaths'
+import { STAFF_ROOMS_LIST_PATH, staffBookPath } from '../../utils/staff/staffRoomsPaths'
 
 function defaultCheckIn() {
   const d = new Date()
@@ -190,7 +190,12 @@ export function StaffRoomDetailPage() {
                     roomSnapshot: room,
                   })
                   navigate(
-                    `/book?roomId=${room.id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`,
+                    staffBookPath({
+                      roomId: room.id,
+                      checkIn,
+                      checkOut,
+                      guests,
+                    }),
                   )
                 }}
               >
