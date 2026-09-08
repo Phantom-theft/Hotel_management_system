@@ -97,4 +97,17 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
   }
 }
 
+export async function changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user?.id) {
+      throw new AppError(401, 'Authentication required');
+    }
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export { setRefreshTokenCookie, clearRefreshTokenCookie };

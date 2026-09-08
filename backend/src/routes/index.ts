@@ -9,6 +9,7 @@ import reportRoutes from './report.routes';
 import staffRoutes from './staff.routes';
 import promoCodeRoutes from './promoCode.routes';
 import reviewRoutes from './review.routes';
+import userRoutes from './user.routes';
 import { authenticate, authorize } from '../middleware/rbac.middleware';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.get('/health', (_req: Request, res: Response) => {
 });
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/room-types', roomTypeRoutes);
 router.use('/rooms', roomRoutes);
 router.use('/bookings', bookingRoutes);

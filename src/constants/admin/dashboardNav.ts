@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Percent,
   Star,
+  UserRound,
   Users,
 } from 'lucide-react'
 
@@ -24,6 +25,7 @@ export const ADMIN_DASHBOARD_NAV: AdminDashboardNavItem[] = [
   { to: '/admin/reviews', label: 'Reviews', icon: Star },
   { to: '/admin/staff', label: 'Staff', icon: Users },
   { to: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/admin/profile', label: 'Profile', icon: UserRound },
 ]
 
 export function adminDashboardTitleForPath(pathname: string): string | null {
@@ -34,6 +36,7 @@ export function adminDashboardTitleForPath(pathname: string): string | null {
   if (pathname.startsWith('/admin/reviews')) return 'Guest Reviews'
   if (pathname.startsWith('/admin/staff')) return 'Staff'
   if (pathname.startsWith('/admin/reports')) return 'Reports'
+  if (pathname.startsWith('/admin/profile')) return 'Profile'
   return 'Dashboard'
 }
 

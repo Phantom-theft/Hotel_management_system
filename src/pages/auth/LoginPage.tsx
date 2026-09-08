@@ -5,14 +5,7 @@ import { useAuthNavigation } from '../../hooks/useAuthNavigation'
 import { clearSessionCache } from '../../queryClient'
 import { useAuthStore } from '../../store/authStore'
 import { useAuthTransitionStore } from '../../store/authTransitionStore'
-import type { UserRole } from '../../types/api'
-import { readReturnPath } from '../../utils/authRedirect'
-
-function homeForRole(role: UserRole) {
-  if (role === 'admin') return '/admin'
-  if (role === 'staff') return '/staff'
-  return '/rooms'
-}
+import { readReturnPath, resolvePostLoginPath } from '../../utils/authRedirect'
 
 export function LoginPageContent() {
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -34,7 +27,7 @@ export function LoginPageContent() {
       clearSessionCache()
       setAuth(data.user, data.accessToken)
       useAuthTransitionStore.getState().reset()
-      navigate(returnTo ?? homeForRole(data.user.role), { replace: true })
+      navigate(resolvePostLoginPath(data.user.role, returnTo), { replace: true })
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??

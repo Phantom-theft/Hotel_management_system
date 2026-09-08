@@ -32,6 +32,9 @@ const uploader = multer({
 /** Accept up to 10 image files under the field name `images`. */
 export const uploadRoomTypeImages = uploader.array('images', MAX_FILES);
 
+/** Accept a single profile image under the field name `avatar`. */
+export const uploadAvatarImage = uploader.single('avatar');
+
 /** Map Multer errors to clear AppError messages for the client. */
 export function handleUploadError(
   err: unknown,

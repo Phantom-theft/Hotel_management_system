@@ -19,6 +19,15 @@ Auth styles:
   200: `{ user, accessToken }`
 - `POST /auth/logout`  
   200: `{ message }`
+- `PATCH /auth/change-password` (Auth)  
+  Body: `{ currentPassword, newPassword }`  
+  200: `{ message }` — rejects if current password is wrong
+
+## Users (Auth — any role)
+- `GET /users/me` → `{ user }` (name, email, phone, avatarUrl, role, createdAt, …)
+- `PATCH /users/me` Body: `{ name?, phone? }` (email/role read-only)
+- `POST /users/me/avatar` (multipart) field `avatar` → uploads to Cloudinary, returns `{ user }`
+- `DELETE /users/me/avatar` → clears avatar, returns `{ user }`
 
 ## Room Types (Admin)
 - `GET /room-types`

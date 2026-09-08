@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthHydrated } from '../hooks/useAuthHydrated'
 import { selectIsSessionValid, useAuthStore } from '../store/authStore'
 import type { UserRole } from '../types/api'
+import { homeForRole } from '../utils/authRedirect'
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRole[]
@@ -29,9 +30,7 @@ export function ProtectedRoute({ allowedRoles, children }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    const fallback =
-      user.role === 'admin' ? '/admin' : user.role === 'staff' ? '/staff' : '/rooms'
-    return <Navigate to={fallback} replace />
+    return <Navigate to={homeForRole(user.role)} replace />
   }
 
   return children ? <>{children}</> : <Outlet />

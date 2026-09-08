@@ -15,6 +15,7 @@ export interface User {
   email: string
   role: UserRole
   phone: string | null
+  avatarUrl?: string | null
   isActive?: boolean
   createdAt: string
 }

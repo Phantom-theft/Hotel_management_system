@@ -42,6 +42,39 @@ export async function refreshSession(): Promise<AuthResponse> {
   return data
 }
 
+export async function getMyProfile(): Promise<{ user: User }> {
+  const { data } = await api.get<{ user: User }>('/users/me')
+  return data
+}
+
+export async function updateMyProfile(input: {
+  name?: string
+  phone?: string | null
+}): Promise<{ user: User }> {
+  const { data } = await api.patch<{ user: User }>('/users/me', input)
+  return data
+}
+
+export async function uploadMyAvatar(file: File): Promise<{ user: User }> {
+  const form = new FormData()
+  form.append('avatar', file)
+  const { data } = await api.post<{ user: User }>('/users/me/avatar', form)
+  return data
+}
+
+export async function removeMyAvatar(): Promise<{ user: User }> {
+  const { data } = await api.delete<{ user: User }>('/users/me/avatar')
+  return data
+}
+
+export async function changePassword(input: {
+  currentPassword: string
+  newPassword: string
+}): Promise<{ message: string }> {
+  const { data } = await api.patch<{ message: string }>('/auth/change-password', input)
+  return data
+}
+
 export async function searchRooms(params: {
   checkIn: string
   checkOut: string

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, X } from 'lucide-react'
 import { logout as logoutApi } from '../../api/hotel'
+import { UserAvatar } from '../ui/UserAvatar'
 import { STAFF_DASHBOARD_NAV } from '../../constants/staff/dashboardNav'
 import { useStaffDashboardShell } from '../../contexts/staff/StaffDashboardShellContext'
 import { clearSessionCache } from '../../queryClient'
@@ -29,7 +30,7 @@ export function StaffDashboardSidebar() {
     } finally {
       clearSessionCache()
       clearAuth()
-      navigate('/')
+      navigate('/', { replace: true, state: null })
     }
   }
 
@@ -72,10 +73,21 @@ export function StaffDashboardSidebar() {
       </nav>
 
       <div className="border-t border-white/10 p-4">
-        <div className="mb-3 rounded-lg bg-white/5 px-3 py-2.5">
-          <p className="truncate text-sm font-semibold text-white">{user?.name}</p>
-          <p className="text-xs capitalize text-white/60">{user?.role}</p>
-        </div>
+        <NavLink
+          to="/staff/profile"
+          onClick={() => setSidebarOpen(false)}
+          className="mb-3 flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5 transition hover:bg-white/10"
+        >
+          <UserAvatar
+            name={user?.name ?? 'Staff'}
+            avatarUrl={user?.avatarUrl}
+            className="h-9 w-9 shrink-0 rounded-full bg-white/10 text-xs text-white"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-white">{user?.name}</p>
+            <p className="text-xs capitalize text-white/60">{user?.role}</p>
+          </div>
+        </NavLink>
         <button
           type="button"
           onClick={() => void handleLogout()}

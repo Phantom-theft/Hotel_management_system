@@ -40,6 +40,7 @@ model User {
   passwordHash String     @map("password_hash")
   role         UserRole   @default(customer)
   phone        String?
+  avatarUrl    String?    @map("avatar_url")
   isActive     Boolean    @default(true) @map("is_active")
   createdAt    DateTime   @default(now()) @map("created_at")
 

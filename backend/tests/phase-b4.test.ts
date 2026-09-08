@@ -187,6 +187,17 @@ describe('RBAC matrix (all protected route groups)', () => {
       { method: 'get', path: '/api/reports/occupancy?from=2026-01-01&to=2026-01-03', allowed: [UserRole.admin] },
       { method: 'get', path: '/api/bookings/today', allowed: [UserRole.staff, UserRole.admin] },
       { method: 'post', path: '/api/bookings/walk-in', body: guestForWalkIn, allowed: [UserRole.staff, UserRole.admin] },
+      {
+        method: 'get',
+        path: '/api/users/me',
+        allowed: [UserRole.customer, UserRole.staff, UserRole.admin],
+      },
+      {
+        method: 'patch',
+        path: '/api/auth/change-password',
+        body: { currentPassword: 'x', newPassword: 'NewPass123!' },
+        allowed: [UserRole.customer, UserRole.staff, UserRole.admin],
+      },
     ];
 
     for (const c of checks) {

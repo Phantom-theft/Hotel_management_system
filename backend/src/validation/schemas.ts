@@ -45,6 +45,24 @@ export const authLoginSchema = z.object({
   }),
 });
 
+export const changePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  }),
+});
+
+export const updateMeSchema = z.object({
+  body: z
+    .object({
+      name: z.string().min(2).optional(),
+      phone: z.string().min(5).nullable().optional(),
+    })
+    .refine((v) => v.name !== undefined || v.phone !== undefined, {
+      message: 'At least one of name or phone is required',
+    }),
+});
+
 export const emptyBodySchema = z.object({
   body: z.object({}).optional(),
 });

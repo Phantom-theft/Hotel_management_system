@@ -141,3 +141,33 @@ async function issueTokensForUser(user: User): Promise<AuthResult> {
     tokens: { accessToken, refreshToken },
   };
 }
+
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.isActive) {
+    throw new AppError(404, 'User not found');
+  }
+
+  const matches = await comparePassword(currentPassword, user.passwordHash);
+  if (!matches) {
+    throw new AppError(400, 'Current password is incorrect');
+  }
+
+  if (newPassword.length < 8) {
+    throw new AppError(400, 'New password must be at least 8 characters');
+  }
+
+  if (currentPassword === newPassword) {
+    throw new AppError(400, 'New password must be different from the current password');
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
+  });
+}

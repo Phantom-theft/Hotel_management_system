@@ -26,6 +26,7 @@ import { AdminReportsPage } from './pages/admin/AdminReportsPage'
 import { AdminReviewsPage } from './pages/admin/AdminReviewsPage'
 import { AdminRoomsPage } from './pages/admin/AdminRoomsPage'
 import { AdminStaffPage } from './pages/admin/AdminStaffPage'
+import { ProfilePage } from './pages/shared/ProfilePage'
 
 function AppRoutes() {
   return (
@@ -44,6 +45,7 @@ function AppRoutes() {
             <Route path="staff/rooms" element={<StaffRoomsPage />} />
             <Route path="staff/rooms/:id" element={<StaffRoomDetailPage />} />
             <Route path="staff/book" element={<GuestBookingFlowPage />} />
+            <Route path="staff/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
@@ -57,6 +59,7 @@ function AppRoutes() {
               <Route path="reviews" element={<AdminReviewsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="staff" element={<AdminStaffPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
           </Route>
         </Route>
@@ -70,6 +73,7 @@ function AppRoutes() {
             <Route path="rooms" element={<GuestRoomsPage />} />
             <Route path="rooms/:id" element={<GuestRoomDetailPage />} />
             <Route path="book" element={<GuestBookingFlowPage />} />
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['customer']} />}>

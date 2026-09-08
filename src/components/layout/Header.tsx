@@ -9,6 +9,7 @@ import { clearSessionCache } from '../../queryClient'
 import { useAuthStore } from '../../store/authStore'
 import type { UserRole } from '../../types/api'
 import { scrollToSection, scrollToTop } from '../../utils/scroll'
+import { UserAvatar } from '../ui/UserAvatar'
 
 const appRouteLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm tracking-wide transition ${
@@ -31,16 +32,19 @@ function appNavLinksForRole(role: UserRole | undefined) {
         { to: '/admin/reviews', label: 'Reviews' },
         { to: '/admin/staff', label: 'Staff' },
         { to: '/admin/reports', label: 'Reports' },
+        { to: '/admin/profile', label: 'Profile' },
       ]
     case 'staff':
       return [
         { to: '/staff', label: 'Desk', end: true },
-        { to: '/rooms', label: 'Rooms' },
+        { to: '/staff/rooms', label: 'Rooms' },
+        { to: '/staff/profile', label: 'Profile' },
       ]
     case 'customer':
       return [
         { to: '/rooms', label: 'Rooms' },
         { to: '/my-bookings', label: 'My bookings' },
+        { to: '/profile', label: 'Profile' },
       ]
     default:
       return []
@@ -109,7 +113,7 @@ export function Header() {
     } finally {
       clearSessionCache()
       clearAuth()
-      navigate('/')
+      navigate('/', { replace: true, state: null })
     }
   }
 
@@ -239,13 +243,27 @@ export function Header() {
             )
           ) : (
             <>
-              <span
-                className={`hidden max-w-[8rem] truncate text-sm lg:inline xl:max-w-none transition-colors duration-300 ${
-                  isTransparent ? 'text-white/80' : 'text-neutral-500'
+              <NavLink
+                to={
+                  user?.role === 'admin'
+                    ? '/admin/profile'
+                    : user?.role === 'staff'
+                      ? '/staff/profile'
+                      : '/profile'
+                }
+                className={`hidden items-center gap-2 lg:inline-flex transition-colors duration-300 ${
+                  isTransparent ? 'text-white/80 hover:text-white' : 'text-neutral-500 hover:text-primary'
                 }`}
               >
-                {user?.name}
-              </span>
+                <UserAvatar
+                  name={user?.name ?? 'User'}
+                  avatarUrl={user?.avatarUrl}
+                  className={`h-8 w-8 rounded-full text-[10px] ${
+                    isTransparent ? 'bg-white/15 text-white' : 'bg-primary/10 text-primary'
+                  }`}
+                />
+                <span className="max-w-[8rem] truncate text-sm xl:max-w-none">{user?.name}</span>
+              </NavLink>
               {!mobileOpen && (
                 <button
                   type="button"

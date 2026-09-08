@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronDown, LogOut, Shield, X } from 'lucide-react'
 import { logout as logoutApi } from '../../api/hotel'
+import { UserAvatar } from '../ui/UserAvatar'
 import { ADMIN_DASHBOARD_NAV } from '../../constants/admin/dashboardNav'
 import { useAdminDashboardShell } from '../../contexts/admin/AdminDashboardShellContext'
 import { clearSessionCache } from '../../queryClient'
@@ -13,13 +14,6 @@ function navLinkClass(isActive: boolean) {
       ? 'border-l-[3px] border-amber-400 bg-white/10 pl-[9px] text-white'
       : 'border-l-[3px] border-transparent text-white/70 hover:bg-white/5 hover:text-white'
   }`
-}
-
-function userInitials(name?: string | null) {
-  if (!name?.trim()) return 'DA'
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
 }
 
 function BrandMark() {
@@ -50,7 +44,7 @@ export function AdminDashboardSidebar() {
     } finally {
       clearSessionCache()
       clearAuth()
-      navigate('/')
+      navigate('/', { replace: true, state: null })
     }
   }
 
@@ -97,19 +91,22 @@ export function AdminDashboardSidebar() {
       </nav>
 
       <div className="border-t border-white/10 p-4">
-        <button
-          type="button"
+        <NavLink
+          to="/admin/profile"
+          onClick={() => setSidebarOpen(false)}
           className="mb-3 flex w-full items-center gap-3 rounded-lg bg-white/5 px-3 py-2.5 text-left transition hover:bg-white/10"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-xs font-bold text-amber-300">
-            {userInitials(displayName)}
-          </div>
+          <UserAvatar
+            name={displayName}
+            avatarUrl={user?.avatarUrl}
+            className="h-9 w-9 shrink-0 rounded-full bg-amber-400/20 text-xs text-amber-300"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">{displayName}</p>
             <p className="truncate text-xs text-white/55">{displayRole}</p>
           </div>
           <ChevronDown className="h-4 w-4 shrink-0 text-white/45" aria-hidden />
-        </button>
+        </NavLink>
         <button
           type="button"
           onClick={() => void handleLogout()}

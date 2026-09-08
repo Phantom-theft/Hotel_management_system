@@ -18,6 +18,7 @@ export interface SafeUser {
   email: string;
   role: UserRole;
   phone: string | null;
+  avatarUrl: string | null;
   isActive: boolean;
   createdAt: Date;
 }
